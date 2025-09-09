@@ -178,7 +178,7 @@ func (fo *FidelityOptions) Get1stLevelEventCodeLength(grammar Grammar) int {
 		} else {
 			cl1 = 0
 		}
-	case GrammarTypeSchemaInformedDocContent, GrammarTypeBuiltInDocConent:
+	case GrammarTypeSchemaInformedDocContent, GrammarTypeBuiltInDocContent:
 		inc := 0
 		if fo.isDTD || fo.isComment || fo.isPI {
 			inc = 1
@@ -211,7 +211,7 @@ func (fo *FidelityOptions) Get2ndLevelEventType(ec2 int, grammar Grammar) EventT
 	switch grammar.GetGrammarType() {
 	case GrammarTypeDocument, GrammarTypeFragment, GrammarTypeDocEnd, GrammarTypeSchemaInformedFragmentContent, GrammarTypeBuiltInFragmentContent:
 		// Root grammars
-	case GrammarTypeSchemaInformedDocContent, GrammarTypeBuiltInDocConent:
+	case GrammarTypeSchemaInformedDocContent, GrammarTypeBuiltInDocContent:
 		if fo.isDTD && ec2 == 0 {
 			eventType = EventTypeDocType
 		}
@@ -394,7 +394,7 @@ func (fo *FidelityOptions) Get2ndLevelEventCode(eventType EventType, grammar Gra
 	switch grammar.GetGrammarType() {
 	case GrammarTypeDocument, GrammarTypeFragment, GrammarTypeDocEnd, GrammarTypeSchemaInformedFragmentContent, GrammarTypeBuiltInFragmentContent:
 		// Root grammars
-	case GrammarTypeSchemaInformedDocContent, GrammarTypeBuiltInDocConent:
+	case GrammarTypeSchemaInformedDocContent, GrammarTypeBuiltInDocContent:
 		/* Schema-informed Document and Fragment Grammars */
 		/* Built-in Document and Fragment Grammars */
 		if fo.isDTD && eventType == EventTypeDocType {
@@ -474,6 +474,8 @@ func (fo *FidelityOptions) Get2ndLevelEventCode(eventType EventType, grammar Gra
 				ec2 = 0 - dec
 			case EventTypeAttributeGenericUndeclared:
 				ec2 = 1 - dec
+			case EventTypeAttributeInvalidValue:
+				ec2 = 2 - dec
 			case EventTypeStartElementGenericUndeclared:
 				ec2 = 3 - dec
 			case EventTypeCharactersGenericUndeclared:
@@ -576,7 +578,7 @@ func (fo *FidelityOptions) Get2ndLevelCharacteristics(grammar Grammar) int {
 		if fo.Get3rdLevelCharacteristics() > 0 {
 			ch2++
 		}
-	case GrammarTypeSchemaInformedDocContent, GrammarTypeBuiltInDocConent:
+	case GrammarTypeSchemaInformedDocContent, GrammarTypeBuiltInDocContent:
 		if fo.isDTD {
 			ch2++
 		}

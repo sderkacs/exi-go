@@ -25,7 +25,7 @@ const (
 	GrammarTypeSchemaInformedStartTagContent
 	GrammarTypeSchemaInformedElementContent
 	/* Built-in Document and Fragment Grammars */
-	GrammarTypeBuiltInDocConent
+	GrammarTypeBuiltInDocContent
 	GrammarTypeBuiltInFragmentContent
 	/* Built-in Element Grammars */
 	GrammarTypeBuiltInStartTagContent
@@ -663,7 +663,7 @@ func NewBuiltInDocContentWithLabel(docEnd Grammar, label string) *BuiltInDocCont
 }
 
 func (c *BuiltInDocContent) GetGrammarType() GrammarType {
-	return GrammarTypeBuiltInDocConent
+	return GrammarTypeBuiltInDocContent
 }
 
 func (c *BuiltInDocContent) AddProduction(event Event, grammar Grammar) error {

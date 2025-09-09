@@ -766,7 +766,7 @@ func NewAbstractEXIBodyDecoder(exiFactory EXIFactory) (*AbstractEXIBodyDecoder, 
 func (d *AbstractEXIBodyDecoder) pushElement(updContextGrammar Grammar, se *StartElement) {
 	d.AbstractEXIBodyCoder.pushElement(updContextGrammar, se)
 
-	if d.preservePrefix && d.elementContextStackIndex == 1 {
+	if !d.preservePrefix && d.elementContextStackIndex == 1 {
 		// Note: can be done several times due to multiple root elements in fragments.
 		gc := d.grammar.GetGrammarContext()
 		for i := 2; i < gc.GetNumberOfGrammarUriContexts(); i++ {
@@ -3731,7 +3731,7 @@ func (d *EXIBodyDecoderInOrder) DecodeAttribute() (*QNameContext, error) {
 		if err := d.decodeAttributeAnyInvalidValueStructure(); err != nil {
 			return nil, err
 		}
-		if err := d.readAttributeContent(); err != nil {
+		if err := d.readAttributeContentWithDatatype(BuiltInGetDefaultDatatype()); err != nil {
 			return nil, err
 		}
 	default:

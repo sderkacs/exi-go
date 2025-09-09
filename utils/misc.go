@@ -296,7 +296,7 @@ func Itos64(l int64, index *int, buf []rune) {
  *
  * Will fail if i < 0 (zero)
  */
-func ItosReverse32(i int, index *int, buf []rune) {
+func ItosReverse32(i int, index *int, buf []rune) int {
 	var q, r int
 	posChar := *index
 
@@ -316,7 +316,7 @@ func ItosReverse32(i int, index *int, buf []rune) {
 	// Fall thru to fast mode for smaller numbers
 	// assert(i <= 65536, i);
 	for {
-		q = int(uint(i*52429) >> uint(16+3))
+		q = int(uint(i*52429) >> (16 + 3))
 		r = i - ((q << 3) + (q << 1))
 		buf[posChar] = digits[r]
 		posChar++
@@ -326,7 +326,7 @@ func ItosReverse32(i int, index *int, buf []rune) {
 		}
 	}
 
-	*index = posChar - *index // number of written chars
+	return posChar - *index // number of written chars
 }
 
 // Places characters representing the integer i into the character array buf
@@ -336,7 +336,7 @@ func ItosReverse64(i int64, index *int, buf []rune) {
 	var r int
 
 	// Get 2 digits/iteration using longs until quotient fits into an int
-	for i >= 65536 {
+	for i > math.MaxInt32 {
 		q = i / 100
 		// really: r = i - (q * 100);
 		r = int(i - ((q << 6) + (q << 5) + (q << 2)))

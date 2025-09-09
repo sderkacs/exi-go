@@ -527,8 +527,7 @@ func dateTimeAppendFractionalSeconds(ca []rune, index *int, fracSecs, sLen int) 
 		*index++
 
 		i := *index
-		utils.ItosReverse32(fracSecs, &i, ca)
-		*index += i
+		*index += utils.ItosReverse32(fracSecs, &i, ca)
 	}
 }
 

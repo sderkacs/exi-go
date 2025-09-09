@@ -105,7 +105,8 @@ func (r *BitReader) Skip(n int64) error {
 	} else {
 		// not aligned
 		//TODO: Wierd range in Java code: for i := 0; i < n; n++ {...}
-		for range n {
+		//for range n {
+		for i := int64(0); i < n; n++ {
 			if _, err := r.ReadBits(8); err != nil {
 				return err
 			}
