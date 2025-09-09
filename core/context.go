@@ -126,6 +126,9 @@ func (q *QNameContext) GetNamespaceUri() string {
 }
 
 func (q *QNameContext) Equals(other *QNameContext) bool {
+	if other == nil {
+		return false
+	}
 	return q.localNameId == other.localNameId && q.namespaceUriId == other.namespaceUriId
 }
 

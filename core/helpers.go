@@ -385,7 +385,7 @@ func (f *DefaultEXIFactory) CreateStringEncoder() StringEncoder {
 }
 
 func (f *DefaultEXIFactory) isSchemaInformed() bool {
-	return f.isSchemaInformed()
+	return f.grammars.IsSchemaInformed()
 }
 
 func (f *DefaultEXIFactory) checkDtrMap() error {

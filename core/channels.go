@@ -183,9 +183,10 @@ func (c *AbstractDecoderChannel) DecodeStringOnly(length int) ([]rune, error) {
 		}
 
 		// Validate code point to ensure it's a valid Unicode code point
-		if codePoint < 0 || codePoint > 0x10FFFF {
-			return nil, fmt.Errorf("invalid Unicode code point U+%X at index %d", codePoint, i)
-		}
+		//TODO: Check disabled!
+		// if codePoint < 0 || codePoint > 0x10FFFF {
+		// 	return nil, fmt.Errorf("invalid Unicode code point U+%X at index %d", codePoint, i)
+		// }
 		ca[i] = rune(codePoint)
 	}
 
@@ -308,14 +309,14 @@ func (c *AbstractDecoderChannel) DecodeIntegerValue() (*IntegerValue, error) {
 	if err != nil {
 		return nil, err
 	}
-	return c.decodeUnsignedIntgerValue(b)
+	return c.decodeUnsignedIntegerValue(b)
 }
 
 func (c *AbstractDecoderChannel) DecodeUnsignedIntegerValue() (*IntegerValue, error) {
-	return c.decodeUnsignedIntgerValue(false)
+	return c.decodeUnsignedIntegerValue(false)
 }
 
-func (c *AbstractDecoderChannel) decodeUnsignedIntgerValue(negative bool) (*IntegerValue, error) {
+func (c *AbstractDecoderChannel) decodeUnsignedIntegerValue(negative bool) (*IntegerValue, error) {
 	var b int
 	var err error
 
@@ -344,7 +345,7 @@ func (c *AbstractDecoderChannel) decodeUnsignedIntgerValue(negative bool) (*Inte
 
 				/* int == 32 bits, 4 * 7bits = 28 bits */
 				iResult := 0
-				for k := i; i >= 0; k-- {
+				for k := i; k >= 0; k-- {
 					iResult = (iResult << 7) | c.maskedOctets[k]
 				}
 				// For negative values, the Unsigned Integer holds the
@@ -360,7 +361,7 @@ func (c *AbstractDecoderChannel) decodeUnsignedIntgerValue(negative bool) (*Inte
 
 				/* long == 64 bits, 9 * 7bits = 63 bits */
 				lResult := int64(0)
-				for k := i; i >= 0; k-- {
+				for k := i; k >= 0; k-- {
 					lResult = (lResult << 7) | int64(c.maskedOctets[k])
 				}
 				// For negative values, the Unsigned Integer holds the
@@ -438,11 +439,11 @@ func (c *AbstractDecoderChannel) DecodeDecimalValue() (*DecimalValue, error) {
 		return nil, err
 	}
 
-	integral, err := c.decodeUnsignedIntgerValue(false)
+	integral, err := c.decodeUnsignedIntegerValue(false)
 	if err != nil {
 		return nil, err
 	}
-	revFractional, err := c.decodeUnsignedIntgerValue(false)
+	revFractional, err := c.decodeUnsignedIntegerValue(false)
 	if err != nil {
 		return nil, err
 	}
@@ -877,11 +878,13 @@ type BitDecoderChannel struct {
 	reader *BitReader
 }
 
-func NewBitDecoderChannel(reader bufio.Reader) *BitDecoderChannel {
+func NewBitDecoderChannel(reader *bufio.Reader) *BitDecoderChannel {
+	adc := NewAbstractDecoderChannel()
 	dc := &BitDecoderChannel{
-		AbstractDecoderChannel: NewAbstractDecoderChannel(),
+		AbstractDecoderChannel: adc,
 		reader:                 NewBitReader(reader),
 	}
+	adc.DecoderChannel = dc
 	return dc
 }
 
@@ -1023,10 +1026,10 @@ func (c *BitEncoderChannel) EncodeBoolean(b bool) error {
 
 type ByteDecoderChannel struct {
 	*AbstractDecoderChannel
-	reader bufio.Reader
+	reader *bufio.Reader
 }
 
-func NewByteDecoderChannel(reader bufio.Reader) *ByteDecoderChannel {
+func NewByteDecoderChannel(reader *bufio.Reader) *ByteDecoderChannel {
 	adc := NewAbstractDecoderChannel()
 	bdc := &ByteDecoderChannel{
 		AbstractDecoderChannel: adc,
@@ -1036,7 +1039,7 @@ func NewByteDecoderChannel(reader bufio.Reader) *ByteDecoderChannel {
 }
 
 func (c *ByteDecoderChannel) GetReader() *bufio.Reader {
-	return &c.reader
+	return c.reader
 }
 
 func (c *ByteDecoderChannel) Decode() (int, error) {

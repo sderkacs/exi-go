@@ -3,6 +3,7 @@ package core
 import (
 	"encoding/base64"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"math"
 	"math/big"
@@ -1545,23 +1546,27 @@ type IntegerValue struct {
 }
 
 func NewIntegerValue32(ival int) *IntegerValue {
-	return &IntegerValue{
-		AbstractValue: NewAbstractValue(ValueTypeInteger),
+	av := NewAbstractValue(ValueTypeInteger)
+	iv := &IntegerValue{
+		AbstractValue: av,
 		ival:          ival,
 		iValType:      IntegerValue32,
 		lval:          0,
 		bval:          nil,
 	}
+	return iv
 }
 
 func NewIntegerValue64(lval int64) *IntegerValue {
-	return &IntegerValue{
-		AbstractValue: NewAbstractValue(ValueTypeInteger),
+	av := NewAbstractValue(ValueTypeInteger)
+	iv := &IntegerValue{
+		AbstractValue: av,
 		ival:          0,
 		iValType:      IntegerValue64,
 		lval:          lval,
 		bval:          nil,
 	}
+	return iv
 }
 
 func NewIntegerValueBig(bval big.Int) *IntegerValue {
@@ -1663,6 +1668,71 @@ func IntegerValueOfBig(bval big.Int) *IntegerValue {
 
 func (v *IntegerValue) GetIntegerValueType() IntegerValueType {
 	return v.iValType
+}
+
+func (v *IntegerValue) GetCharactersLength() (int, error) {
+	if v.sLen == -1 {
+		switch v.iValType {
+		case IntegerValue32:
+			if v.ival == math.MinInt {
+				v.sLen = len(utils.IntegerMinValueCharArray)
+			} else {
+				v.sLen = utils.GetStringSize32(v.ival)
+			}
+		case IntegerValue64:
+			if v.lval == math.MinInt64 {
+				v.sLen = len(utils.LongMinValueCharArray)
+			} else {
+				v.sLen = utils.GetStringSize64(v.lval)
+			}
+		case IntegerValueBig:
+			v.sLen = len(v.bval.String())
+		default:
+			v.sLen = -1
+		}
+	}
+
+	return v.sLen, nil
+}
+
+func (v *IntegerValue) FillCharactersBuffer(buffer []rune, offset int) error {
+	switch v.iValType {
+	case IntegerValue32:
+		if v.ival == math.MinInt {
+			copy(buffer[offset:], utils.IntegerMinValueCharArray)
+		} else {
+			length, err := v.GetCharactersLength()
+			if err != nil {
+				return err
+			}
+			if len(buffer) < length {
+				return errors.New("buffer size is smaller than characters length")
+			}
+			i := offset + length
+			utils.Itos32(v.ival, &i, buffer)
+		}
+	case IntegerValue64:
+		if v.lval == math.MinInt64 {
+			copy(buffer[offset:], utils.LongMinValueCharArray)
+		} else {
+			length, err := v.GetCharactersLength()
+			if err != nil {
+				return err
+			}
+			if len(buffer) < length {
+				return errors.New("buffer size is smaller than characters length")
+			}
+			i := offset + length
+			utils.Itos64(v.lval, &i, buffer)
+		}
+	case IntegerValueBig:
+		sval := v.bval.String()
+		copy(buffer, []rune(sval))
+	default:
+		// return nil
+	}
+
+	return nil
 }
 
 func (v *IntegerValue) Value32() int {

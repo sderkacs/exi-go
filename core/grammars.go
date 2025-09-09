@@ -153,9 +153,11 @@ func initSchemaLessGrammarContext() {
 
 func NewSchemaLessGrammars() *SchemaLessGrammars {
 	schemaLessInit.Do(initSchemaLessGrammarContext)
+	ag := NewAbstractGrammars(false, schemaLessGrammarContext)
 	g := &SchemaLessGrammars{
-		AbstractGrammars: NewAbstractGrammars(false, schemaLessGrammarContext),
+		AbstractGrammars: ag,
 	}
+	g.Grammars = ag
 
 	builtInDocEndGrammar := NewDocEndWithLabel("DocEnd")
 	builtInDocEndGrammar.AddTerminalProduction(NewEndDocument())

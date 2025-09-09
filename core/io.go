@@ -24,10 +24,10 @@ type BitReader struct {
 	buffer int
 
 	// Underlying input stream.
-	reader bufio.Reader
+	reader *bufio.Reader
 }
 
-func NewBitReader(reader bufio.Reader) *BitReader {
+func NewBitReader(reader *bufio.Reader) *BitReader {
 	return &BitReader{
 		capacity: 0,
 		buffer:   0,
@@ -40,7 +40,7 @@ func NewBitReader(reader bufio.Reader) *BitReader {
  * allows instances of this class to be re-used. The resulting state after
  * calling this method is identical to that of a newly created instance.
  */
-func (r *BitReader) SetReader(reader bufio.Reader) {
+func (r *BitReader) SetReader(reader *bufio.Reader) {
 	r.reader = reader
 	r.buffer = 0
 	r.capacity = 0
@@ -63,6 +63,7 @@ func (r *BitReader) readBuffer() error {
 		return err
 	}
 	r.buffer = b
+	r.capacity = BufferCapacity
 	return nil
 }
 

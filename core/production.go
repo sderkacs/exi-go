@@ -6,13 +6,13 @@ type Production interface {
 	GetEventCode() int
 }
 
-type AbstractProductionType interface {
-	Production
-	GetEventCode() int
-}
+// type AbstractProductionType interface {
+// 	Production
+// 	GetEventCode() int
+// }
 
 type AbstractProduction struct {
-	AbstractProductionType
+	Production
 	next      Grammar
 	eventCode int
 	event     Event
@@ -39,9 +39,13 @@ type SchemaInformedProduction struct {
 }
 
 func NewSchemaInformedProduction(next Grammar, event Event, eventCode int) *SchemaInformedProduction {
-	return &SchemaInformedProduction{
-		AbstractProduction: NewAbstractProduction(next, event, eventCode),
+	ap := NewAbstractProduction(next, event, eventCode)
+	sip := &SchemaInformedProduction{
+		AbstractProduction: ap,
 	}
+	ap.Production = sip
+
+	return sip
 }
 
 func (p *SchemaInformedProduction) GetEventCode() int {
@@ -54,10 +58,14 @@ type SchemaLessProduction struct {
 }
 
 func NewSchemaLessProduction(parent, next Grammar, event Event, eventCode int) *SchemaLessProduction {
-	return &SchemaLessProduction{
-		AbstractProduction: NewAbstractProduction(next, event, eventCode),
+	ap := NewAbstractProduction(next, event, eventCode)
+	slp := &SchemaLessProduction{
+		AbstractProduction: ap,
 		parent:             parent,
 	}
+	ap.Production = slp
+
+	return slp
 }
 
 func (p *SchemaLessProduction) GetEventCode() int {

@@ -27,13 +27,13 @@ const (
 
 type EXIBodyDecoder interface {
 	// Sets the input stream and resets all internal states
-	SetInputStream(reader bufio.Reader) error
+	SetInputStream(reader *bufio.Reader) error
 
 	// Sets input channel and resets all internal states
 	SetInputChannel(channel DecoderChannel) error
 
 	// Sets the input stream and does not reset internal states
-	UpdateInputStream(reader bufio.Reader) error
+	UpdateInputStream(reader *bufio.Reader) error
 
 	// Sets input channel and does not reset internal states
 	UpdateInputChannel(channel DecoderChannel) error
@@ -175,8 +175,8 @@ type EXIBodyEncoder interface {
 }
 
 type EXIStreamDecoder interface {
-	GetBodyOnlyDecoder(reader bufio.Reader) (EXIBodyDecoder, error)
-	DecodeHeader(reader bufio.Reader) (EXIBodyDecoder, error)
+	GetBodyOnlyDecoder(reader *bufio.Reader) (EXIBodyDecoder, error)
+	DecodeHeader(reader *bufio.Reader) (EXIBodyDecoder, error)
 }
 
 type EXIStreamEncoder interface {
@@ -448,7 +448,9 @@ func NewAbstractEXIBodyCoder(exiFactory EXIFactory) (*AbstractEXIBodyCoder, erro
 
 	runtimeURIs := make([]*RuntimeUriContext, gURIs)
 	for i := range gURIs {
-		runtimeURIs = append(runtimeURIs, RuntimeUriContextFromContext(grammarContext.GetGrammarUriContextByID(i)))
+		ctx := grammarContext.GetGrammarUriContextByID(i)
+		fmt.Printf("[DEBUG] ctx[%d] == %+v\n", i, ctx)
+		runtimeURIs[i] = RuntimeUriContextFromContext(ctx)
 	}
 
 	var maxBuiltInElementGrammars int
@@ -491,14 +493,14 @@ func NewAbstractEXIBodyCoder(exiFactory EXIFactory) (*AbstractEXIBodyCoder, erro
 }
 
 func (c *AbstractEXIBodyCoder) getXsiTypeContext() *QNameContext {
-	if c.xsiTypeContext != nil {
+	if c.xsiTypeContext == nil {
 		c.xsiTypeContext = c.grammarContext.GetGrammarUriContextByID(2).GetQNameContextByLocalNameID(1)
 	}
 	return c.xsiTypeContext
 }
 
 func (c *AbstractEXIBodyCoder) getXsiNilContext() *QNameContext {
-	if c.xsiNilContext != nil {
+	if c.xsiNilContext == nil {
 		c.xsiNilContext = c.grammarContext.GetGrammarUriContextByID(2).GetQNameContextByLocalNameID(0)
 	}
 	return c.xsiNilContext
@@ -3412,12 +3414,54 @@ func (e *AbstractEXIBodyEncoder) EncodeProcessingInstruction(target, data string
 type EXIStreamDecoderImpl struct {
 	EXIStreamDecoder
 	exiHeader        *EXIHeaderDecoder
-	exiBody          *EXIBodyDecoder
+	exiBody          EXIBodyDecoder
 	noOptionsFactory EXIFactory
 }
 
 func NewEXIStreamDecoderImpl(noOptionsFactory EXIFactory) (*EXIStreamDecoderImpl, error) {
-	return nil, nil
+	exiBody, err := noOptionsFactory.CreateEXIBodyDecoder()
+	if err != nil {
+		return nil, err
+	}
+	return &EXIStreamDecoderImpl{
+		exiHeader:        NewEXIHeaderDecoder(),
+		exiBody:          exiBody,
+		noOptionsFactory: noOptionsFactory,
+	}, nil
+}
+
+func (d *EXIStreamDecoderImpl) GetBodyOnlyDecoder(reader *bufio.Reader) (EXIBodyDecoder, error) {
+	if err := d.exiBody.SetInputStream(reader); err != nil {
+		return nil, err
+	}
+	return d.exiBody, nil
+}
+
+func (d *EXIStreamDecoderImpl) DecodeHeader(reader *bufio.Reader) (EXIBodyDecoder, error) {
+	headerChannel := NewBitDecoderChannel(reader)
+	exiFactory, err := d.exiHeader.Parse(headerChannel, d.noOptionsFactory)
+	if err != nil {
+		return nil, err
+	}
+
+	// update body decoder if EXI options tell to do so
+	if exiFactory != d.noOptionsFactory {
+		d.exiBody, err = exiFactory.CreateEXIBodyDecoder()
+		if err != nil {
+			return nil, err
+		}
+	}
+	if exiFactory.GetCodingMode() == CodingModeBitPacked {
+		if err := d.exiBody.SetInputChannel(headerChannel); err != nil {
+			return nil, err
+		}
+	} else {
+		if err := d.exiBody.SetInputStream(reader); err != nil {
+			return nil, err
+		}
+	}
+
+	return d.exiBody, nil
 }
 
 /*
@@ -3454,7 +3498,7 @@ func NewEXIBodyDecoderInOrder(exiFactory EXIFactory) (*EXIBodyDecoderInOrder, er
 	}, nil
 }
 
-func (d *EXIBodyDecoderInOrder) SetInputStream(reader bufio.Reader) error {
+func (d *EXIBodyDecoderInOrder) SetInputStream(reader *bufio.Reader) error {
 	if err := d.UpdateInputStream(reader); err != nil {
 		return err
 	}
@@ -3468,7 +3512,7 @@ func (d *EXIBodyDecoderInOrder) SetInputChannel(channel DecoderChannel) error {
 	return d.InitForEachRun()
 }
 
-func (d *EXIBodyDecoderInOrder) UpdateInputStream(reader bufio.Reader) error {
+func (d *EXIBodyDecoderInOrder) UpdateInputStream(reader *bufio.Reader) error {
 	codingMode := d.exiFactory.GetCodingMode()
 
 	// setup data-stream only

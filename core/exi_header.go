@@ -691,7 +691,7 @@ func (d *EXIHeaderDecoder) clear() {
 	d.dtrMapRepresentations = []QName{}
 }
 
-func (d *EXIHeaderDecoder) Parse(headerChannel BitDecoderChannel, noOptionsFactory EXIFactory) (EXIFactory, error) {
+func (d *EXIHeaderDecoder) Parse(headerChannel *BitDecoderChannel, noOptionsFactory EXIFactory) (EXIFactory, error) {
 	ch, err := headerChannel.LookAhead()
 	if err != nil {
 		return nil, err
@@ -716,6 +716,8 @@ func (d *EXIHeaderDecoder) Parse(headerChannel BitDecoderChannel, noOptionsFacto
 		if rune(h0) != '$' || rune(h1) != 'E' || rune(h2) != 'X' || rune(h3) != 'I' {
 			return nil, errors.New("no valid EXI Cookie ($EXI)")
 		}
+	} else {
+		fmt.Printf("[DEBUG] no EXI cookie header (ch[0] == %02X)\n", ch)
 	}
 
 	// An EXI header starts with Distinguishing Bits part, which is a
@@ -725,7 +727,7 @@ func (d *EXIHeaderDecoder) Parse(headerChannel BitDecoderChannel, noOptionsFacto
 		return nil, err
 	}
 	if dbits != EXIHeader_DistinguishingBitsValue {
-		return nil, errors.New("no valid EXI document according distinguishing bits")
+		return nil, fmt.Errorf("no valid EXI document a+ccording distinguishing bits: %d", dbits)
 	}
 
 	// Presence Bit for EXI Options
@@ -796,7 +798,7 @@ func (d *EXIHeaderDecoder) Parse(headerChannel BitDecoderChannel, noOptionsFacto
 	return exiFactory, nil
 }
 
-func (d *EXIHeaderDecoder) ReadEXIOptions(headerChannel BitDecoderChannel, noOptionsFactory EXIFactory) (EXIFactory, error) {
+func (d *EXIHeaderDecoder) ReadEXIOptions(headerChannel *BitDecoderChannel, noOptionsFactory EXIFactory) (EXIFactory, error) {
 	factory, err := d.GetHeaderFactory()
 	if err != nil {
 		return nil, err

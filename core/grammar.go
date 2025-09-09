@@ -450,7 +450,7 @@ func NewSchemaInformedElement() *SchemaInformedElement {
 	se := &SchemaInformedElement{
 		AbstractSchemaInformedContent: asic,
 	}
-	asic.Grammar = se
+	se.Grammar = asic
 
 	return se
 }
@@ -806,9 +806,12 @@ func NewDocEnd() *DocEnd {
 }
 
 func NewDocEndWithLabel(label string) *DocEnd {
-	return &DocEnd{
-		AbstractSchemaInformedGrammar: NewAbstractSchemaInformedGrammarWithLabel(&label),
+	asig := NewAbstractSchemaInformedGrammarWithLabel(&label)
+	de := &DocEnd{
+		AbstractSchemaInformedGrammar: asig,
 	}
+	de.Grammar = asig
+	return de
 }
 
 func (e *DocEnd) GetGrammarType() GrammarType {
