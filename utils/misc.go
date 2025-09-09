@@ -34,6 +34,8 @@ var (
 		'9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l',
 		'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y',
 		'z'}
+	IntegerMinValueCharArray []rune = []rune("-2147483648")
+	LongMinValueCharArray    []rune = []rune("-9223372036854775808")
 )
 
 func GetCodingLength(characteristics int) int {
@@ -101,7 +103,7 @@ func stringSize32(x int) int {
 
 func stringSize64(x int64) int {
 	p := int64(10)
-	for i := 0; i < 19; i++ {
+	for i := 1; i < 19; i++ {
 		if x < p {
 			return i
 		}
@@ -125,7 +127,7 @@ func GetStringSize64(l int64) int {
 		if l < 0 {
 			return stringSize64(-l) + 1
 		} else {
-			return GetStringSize64(l)
+			return stringSize64(l)
 		}
 	}
 }
@@ -175,6 +177,116 @@ func Itos32(i int, index *int, buf []rune) {
 			*index--
 			buf[*index] = sign
 		}
+	}
+}
+
+/*
+*
+  - Places characters representing the integer i into the character array
+  - buf. The characters are placed into the buffer backwards starting with
+  - the least significant digit at the specified index (exclusive), and
+  - working backwards from there.
+*/
+func Itos64(l int64, index *int, buf []rune) {
+	if l == math.MinInt64 {
+		*index--
+		buf[*index] = '8'
+		*index--
+		buf[*index] = '0'
+		*index--
+		buf[*index] = '8'
+		*index--
+		buf[*index] = '5'
+		*index--
+		buf[*index] = '7'
+		*index--
+		buf[*index] = '7'
+		*index--
+		buf[*index] = '4'
+		*index--
+		buf[*index] = '5'
+		*index--
+		buf[*index] = '8'
+		*index--
+		buf[*index] = '6'
+		*index--
+		buf[*index] = '3'
+		*index--
+		buf[*index] = '0'
+		*index--
+		buf[*index] = '2'
+		*index--
+		buf[*index] = '7'
+		*index--
+		buf[*index] = '3'
+		*index--
+		buf[*index] = '3'
+		*index--
+		buf[*index] = '2'
+		*index--
+		buf[*index] = '2'
+		*index--
+		buf[*index] = '9'
+		*index--
+		buf[*index] = '-'
+
+		return
+	}
+
+	if l == math.MinInt64 {
+		panic("l == math.MinInt64")
+	}
+
+	var q int64
+	var r int
+	var sign rune = 0
+
+	if l < 0 {
+		sign = '-'
+		l = -l
+	}
+
+	// Get 2 digits/iteration using longs until quotient fits into an int
+	for l > math.MaxInt32 {
+		q = l / 100
+		// really: r = i - (q * 100);
+		r = int(l - ((q << 6) + (q << 5) + (q << 2)))
+		l = q
+		*index--
+		buf[*index] = digitOnes[r]
+		*index--
+		buf[*index] = digitTens[r]
+	}
+
+	// Get 2 digits/iteration using ints
+	var q2 int
+	i2 := int(l)
+	for i2 >= 65536 {
+		q2 = i2 / 100
+		// really: r = i2 - (q * 100);
+		r = i2 - ((q2 << 6) + (q2 << 5) + (q2 << 2))
+		i2 = q2
+		*index--
+		buf[*index] = digitOnes[r]
+		*index--
+		buf[*index] = digitTens[r]
+	}
+
+	// Fall thru to fast mode for smaller numbers
+	// assert(i2 <= 65536, i2);
+	for {
+		q2 = int(uint32(i2*52429) >> (16 + 3))
+		r = i2 - ((q2 << 3) + (q2 << 1))
+		*index--
+		buf[*index] = digits[r]
+		i2 = q2
+		if i2 == 0 {
+			break
+		}
+	}
+	if sign != 0 {
+		*index--
+		buf[*index] = sign
 	}
 }
 
