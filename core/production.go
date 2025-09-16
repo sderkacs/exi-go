@@ -4,6 +4,7 @@ type Production interface {
 	GetEvent() Event
 	GetNextGrammar() Grammar
 	GetEventCode() int
+	Duplicate() Production
 }
 
 // type AbstractProductionType interface {
@@ -32,6 +33,14 @@ func (p *AbstractProduction) GetEvent() Event {
 
 func (p *AbstractProduction) GetNextGrammar() Grammar {
 	return p.next
+}
+
+func (p *AbstractProduction) Duplicate() Production {
+	return &AbstractProduction{
+		next:      p.next,
+		eventCode: p.eventCode,
+		event:     p.event,
+	}
 }
 
 type SchemaInformedProduction struct {

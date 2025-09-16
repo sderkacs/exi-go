@@ -140,7 +140,7 @@ func (r *BitReader) ReadBits(n int) (int, error) {
 	var result int
 	var err error
 
-	if n < r.capacity {
+	if n <= r.capacity {
 		// buffer already holds all necessary bits
 		r.capacity -= n
 		result = (r.buffer >> r.capacity) & (0xff >> (BufferCapacity - n))
@@ -162,10 +162,11 @@ func (r *BitReader) ReadBits(n int) (int, error) {
 				if err := r.readBuffer(); err != nil {
 					return -1, err
 				}
-				result = (result << BufferCapacity) | r.buffer
-				n -= BufferCapacity
-				r.capacity = 0
 			}
+
+			result = (result << BufferCapacity) | r.buffer
+			n -= BufferCapacity
+			r.capacity = 0
 		}
 
 		// read the rest of the bits

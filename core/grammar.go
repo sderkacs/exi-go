@@ -473,11 +473,14 @@ type AbstractBuiltInGrammar struct {
 }
 
 func NewBuiltInGrammar() *AbstractBuiltInGrammar {
-	return &AbstractBuiltInGrammar{
+	g := &AbstractBuiltInGrammar{
 		AbstractGrammar: NewAbstractGrammar(),
 		containers:      []Production{},
 		ec1Length:       0,
 	}
+	// Important: ensure dynamic dispatch via embedded Grammar works
+	g.Grammar = g
+	return g
 }
 
 func (g *AbstractBuiltInGrammar) HasEndElement() bool {
@@ -802,9 +805,11 @@ type DocEnd struct {
 }
 
 func NewDocEnd() *DocEnd {
-	return &DocEnd{
+	de := &DocEnd{
 		AbstractSchemaInformedGrammar: NewAbstractSchemaInformedGrammar(),
 	}
+	de.Grammar = de
+	return de
 }
 
 func NewDocEndWithLabel(label string) *DocEnd {
@@ -812,7 +817,7 @@ func NewDocEndWithLabel(label string) *DocEnd {
 	de := &DocEnd{
 		AbstractSchemaInformedGrammar: asig,
 	}
-	de.Grammar = asig
+	de.Grammar = de
 	return de
 }
 
@@ -829,15 +834,19 @@ type Document struct {
 }
 
 func NewDocument() *Document {
-	return &Document{
+	d := &Document{
 		AbstractSchemaInformedGrammar: NewAbstractSchemaInformedGrammar(),
 	}
+	d.Grammar = d
+	return d
 }
 
 func NewDocumentWithLabel(label string) *Document {
-	return &Document{
+	d := &Document{
 		AbstractSchemaInformedGrammar: NewAbstractSchemaInformedGrammarWithLabel(&label),
 	}
+	d.Grammar = d
+	return d
 }
 
 func (d *Document) GetGrammarType() GrammarType {
@@ -853,15 +862,19 @@ type Fragment struct {
 }
 
 func NewFragment() *Fragment {
-	return &Fragment{
+	f := &Fragment{
 		AbstractSchemaInformedGrammar: NewAbstractSchemaInformedGrammar(),
 	}
+	f.Grammar = f
+	return f
 }
 
 func NewFragmentWithLabel(label string) *Fragment {
-	return &Fragment{
+	f := &Fragment{
 		AbstractSchemaInformedGrammar: NewAbstractSchemaInformedGrammarWithLabel(&label),
 	}
+	f.Grammar = f
+	return f
 }
 
 func (f *Fragment) GetGrammarType() GrammarType {
@@ -877,15 +890,19 @@ type SchemaInformedDocContent struct {
 }
 
 func NewSchemaInformedDocContent() *SchemaInformedDocContent {
-	return &SchemaInformedDocContent{
+	c := &SchemaInformedDocContent{
 		AbstractSchemaInformedGrammar: NewAbstractSchemaInformedGrammar(),
 	}
+	c.Grammar = c
+	return c
 }
 
 func NewSchemaInformedDocContentWithLabel(label string) *SchemaInformedDocContent {
-	return &SchemaInformedDocContent{
+	c := &SchemaInformedDocContent{
 		AbstractSchemaInformedGrammar: NewAbstractSchemaInformedGrammarWithLabel(&label),
 	}
+	c.Grammar = c
+	return c
 }
 
 func (c *SchemaInformedDocContent) GetGrammarType() GrammarType {
@@ -917,7 +934,8 @@ func NewSchemaInformedStartTag() *SchemaInformedStartTag {
 		elementContent2:               nil,
 		sifst:                         nil,
 	}
-
+	// Ensure virtual dispatch from AbstractGrammar works
+	st.Grammar = st
 	return st
 }
 
@@ -1097,15 +1115,19 @@ type SchemaInformedFragmentContent struct {
 }
 
 func NewSchemaInformedFragmentContent() *SchemaInformedFragmentContent {
-	return &SchemaInformedFragmentContent{
+	c := &SchemaInformedFragmentContent{
 		AbstractSchemaInformedGrammar: NewAbstractSchemaInformedGrammar(),
 	}
+	c.Grammar = c
+	return c
 }
 
 func NewSchemaInformedFragmentContentWithLabel(label string) *SchemaInformedFragmentContent {
-	return &SchemaInformedFragmentContent{
+	c := &SchemaInformedFragmentContent{
 		AbstractSchemaInformedGrammar: NewAbstractSchemaInformedGrammarWithLabel(&label),
 	}
+	c.Grammar = c
+	return c
 }
 
 func (c *SchemaInformedFragmentContent) GetGrammarType() GrammarType {
