@@ -200,7 +200,7 @@ func (g *AbstractSchemaInformedGrammar) HasEndElement() bool {
 }
 
 func (g *AbstractSchemaInformedGrammar) isTerminalRule() bool {
-	return false //TODO: ???
+	return g == endRule
 }
 
 func (g *AbstractSchemaInformedGrammar) IsSchemaInformed() bool {
@@ -227,7 +227,7 @@ func (g *AbstractSchemaInformedGrammar) AddProduction(event Event, grammar Gramm
 	if (event.IsEventType(EventTypeEndElement) ||
 		event.IsEventType(EventTypeAttributeGeneric) ||
 		event.IsEventType(EventTypeStartElementGeneric)) && g.GetProduction(event.GetEventType()) != nil {
-		log.Printf("Event %d is already preset", event.GetEventType())
+		log.Printf("Event %d is already present", event.GetEventType())
 	} else {
 		if event.IsEventType(EventTypeEndElement) {
 			g.hasEndElement = true
@@ -240,9 +240,11 @@ func (g *AbstractSchemaInformedGrammar) AddProduction(event Event, grammar Gramm
 				}
 			}
 		}
+
+		return g.updateSortedEvents(event, grammar)
 	}
 
-	return g.updateSortedEvents(event, grammar)
+	return nil
 }
 
 func (g *AbstractSchemaInformedGrammar) updateSortedEvents(newEvent Event, newGrammar Grammar) error {
@@ -347,7 +349,7 @@ func (g *AbstractSchemaInformedGrammar) updateSortedEvents(newEvent Event, newGr
 
 func (g *AbstractSchemaInformedGrammar) JoinGrammars(rule Grammar) {
 	for i := 0; i < rule.GetNumberOfEvents(); i++ {
-		ei := rule.GetProduction(EventType(i))
+		ei := rule.GetProductionByEventCode(i) // PROD FIX
 		g.AddProduction(ei.GetEvent(), ei.GetNextGrammar())
 	}
 }
@@ -450,7 +452,7 @@ func NewSchemaInformedElement() *SchemaInformedElement {
 	se := &SchemaInformedElement{
 		AbstractSchemaInformedContent: asic,
 	}
-	se.Grammar = asic
+	asic.Grammar = se
 
 	return se
 }
