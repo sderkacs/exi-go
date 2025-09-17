@@ -16,7 +16,7 @@ type AttributeList interface {
 
 	// Any attribute other that NS
 	AddAttribute(uri *string, localName string, prefix *string, value string)
-	AddAttributeByQName(at QName, value string)
+	AddAttributeByQName(at utils.QName, value string)
 
 	// XSI-Type
 	HasXsiType() bool
@@ -199,11 +199,11 @@ func (list *AttributeListImpl) GetNumberOfNamespaceDeclarations() int {
 	return len(list.nsDecls)
 }
 
-func (list *AttributeListImpl) GetNamespaceDeclaration(index int) NamespaceDeclarationContainer {
+func (list *AttributeListImpl) GetNamespaceDeclaration(index int) *NamespaceDeclarationContainer {
 	if index < 0 || index >= len(list.nsDecls) {
 		panic("index out of bounds")
 	}
-	return list.nsDecls[index]
+	return &list.nsDecls[index]
 }
 
 // Any attribute other that NS
@@ -237,7 +237,7 @@ func (list *AttributeListImpl) AddAttribute(uri *string, localName string, prefi
 	}
 }
 
-func (list *AttributeListImpl) AddAttributeByQName(at QName, value string) {
+func (list *AttributeListImpl) AddAttributeByQName(at utils.QName, value string) {
 	list.AddAttribute(&at.Space, at.Local, at.Prefix, value)
 }
 
@@ -265,7 +265,7 @@ func (list *AttributeListImpl) insertAttribute(uri *string, localName string, pr
 }
 
 func (list *AttributeListImpl) isGreaterNS(nsIndex int, prefix *string) bool {
-	compPrefix := strings.Compare(*list.GetNamespaceDeclaration(nsIndex).prefix, *prefix)
+	compPrefix := strings.Compare(*list.GetNamespaceDeclaration(nsIndex).Prefix, *prefix)
 
 	return compPrefix > 0
 }

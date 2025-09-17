@@ -3,6 +3,8 @@ package core
 import (
 	"slices"
 	"strconv"
+
+	"github.com/sderkacs/exi-go/utils"
 )
 
 /*
@@ -28,7 +30,7 @@ func NewQNameContextMapKey(qnc *QNameContext) QNameContextMapKey {
 type QNameContext struct {
 	namespaceUriId         int
 	localNameId            int
-	qName                  QName
+	qName                  utils.QName
 	defaultQNameAsString   string
 	defaultPrefix          string
 	grammarGlobalElement   *StartElement
@@ -37,7 +39,7 @@ type QNameContext struct {
 	mapKey                 QNameContextMapKey
 }
 
-func NewQNameContext(namespaceUriId int, localNameId int, qName QName) *QNameContext {
+func NewQNameContext(namespaceUriId int, localNameId int, qName utils.QName) *QNameContext {
 	var defaultPrefix string
 	var defaultQNameAsString string
 
@@ -73,7 +75,7 @@ func (q *QNameContext) GetMapKey() QNameContextMapKey {
 	return q.mapKey
 }
 
-func (q *QNameContext) GetQName() QName {
+func (q *QNameContext) GetQName() utils.QName {
 	return q.qName
 }
 

@@ -136,14 +136,14 @@ func initSchemaLessGrammarContext() {
 
 	qncs = make([]*QNameContext, len(LocalNamesXML))
 	for i := 0; i < len(qncs); i++ {
-		qncs[i] = NewQNameContext(1, i, QName{Space: XML_NS_URI, Local: LocalNamesXML[i]})
+		qncs[i] = NewQNameContext(1, i, utils.QName{Space: XML_NS_URI, Local: LocalNamesXML[i]})
 		qNameID++
 	}
 	contexts[1] = NewGrammarUriContext(1, XML_NS_URI, qncs, PrefixesXML)
 
 	qncs = make([]*QNameContext, len(LocalNamesXSI))
 	for i := 0; i < len(qncs); i++ {
-		qncs[i] = NewQNameContext(1, i, QName{Space: XMLSchemaInstanceNS_URI, Local: LocalNamesXSI[i]})
+		qncs[i] = NewQNameContext(1, i, utils.QName{Space: XMLSchemaInstanceNS_URI, Local: LocalNamesXSI[i]})
 		qNameID++
 	}
 	contexts[2] = NewGrammarUriContext(1, XMLSchemaInstanceNS_URI, qncs, PrefixesXSI)
@@ -158,6 +158,12 @@ func NewSchemaLessGrammars() *SchemaLessGrammars {
 		AbstractGrammars: ag,
 	}
 	g.Grammars = ag
+
+	//builtInDocEndGrammar := NewDocEndWithLabel(utils.AsPtr("DocEnd"))
+	//builtInDocEndGrammar.AddTerminalProduction(NewEndDocument())
+	//buildInDocContentGrammar := NewBuiltInDocContentWithLabel(builtInDocEndGrammar, utils.AsPtr("DocContent"))
+	//g.documentGrammar = NewDocumentWithLabel(utils.AsPtr("Document"))
+	//g.documentGrammar.AddProduction(NewStartDocument(), buildInDocContentGrammar)
 
 	builtInDocEndGrammar := NewDocEndWithLabel("DocEnd")
 	builtInDocEndGrammar.AddTerminalProduction(NewEndDocument())
@@ -191,6 +197,7 @@ func (g *SchemaLessGrammars) SetSchemaID(schemaID *string) error {
 func (g *SchemaLessGrammars) GetFragmentGrammar() Grammar {
 	builtInFragmentContentGrammar := NewBuiltInFragmentContent()
 
+	//g.fragmentGrammar = NewFragmentWithLabel(utils.AsPtr("Fragment"))
 	g.fragmentGrammar = NewFragmentWithLabel("Fragment")
 	g.fragmentGrammar.AddProduction(NewStartDocument(), builtInFragmentContentGrammar)
 

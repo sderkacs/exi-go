@@ -112,9 +112,11 @@ type EXIBodyDecoder interface {
 }
 
 type EXIBodyEncoder interface {
-	SetOutputStream(writer bufio.Writer) error
+	SetOutputStream(writer *bufio.Writer) error
 
 	SetOutputChannel(channel EncoderChannel) error
+
+	WriteValue(qnc *QNameContext) error
 
 	// Flushes (possibly) remaining bit(s) to output stream
 	Flush() error
@@ -134,7 +136,7 @@ type EXIBodyEncoder interface {
 	//
 	// Element prefix can be null according to fidelity options.
 	EncodeStartElement(uri, localName string, prefix *string) error
-	EncodeStartElementByQName(se QName) error
+	EncodeStartElementByQName(se utils.QName) error
 
 	// Supplies the end tag of an element.
 	EncodeEndElement() error
@@ -147,7 +149,7 @@ type EXIBodyEncoder interface {
 	EncodeAttribute(uri, localName string, prefix *string, value Value) error
 
 	// Supplies an attribute with the according value.
-	EncodeAttributeByQName(at QName, value Value) error
+	EncodeAttributeByQName(at utils.QName, value Value) error
 
 	// Namespaces are reported as a discrete Namespace event.
 	EncodeNamespaceDeclaration(uri string, prefix *string) error
@@ -180,7 +182,7 @@ type EXIStreamDecoder interface {
 }
 
 type EXIStreamEncoder interface {
-	EncodeHeader(writer bufio.Writer) (EXIBodyEncoder, error)
+	EncodeHeader(writer *bufio.Writer) (EXIBodyEncoder, error)
 }
 
 /*
@@ -332,7 +334,7 @@ func (c *RuntimeUriContext) GetNumberOfQNames() int {
 
 func (c *RuntimeUriContext) AddQNameContext(localName string) *QNameContext {
 	localNameID := c.GetNumberOfQNames()
-	qName := QName{Space: c.namespaceURI, Local: localName}
+	qName := utils.QName{Space: c.namespaceURI, Local: localName}
 	qnc := NewQNameContext(c.namespaceUriID, localNameID, qName)
 	c.qnames = append(c.qnames, qnc)
 
@@ -414,6 +416,7 @@ const (
 )
 
 type AbstractEXIBodyCoder struct {
+	EXIBodyEncoder
 	exiFactory                EXIFactory
 	grammar                   Grammars
 	grammarContext            *GrammarContext
@@ -449,7 +452,6 @@ func NewAbstractEXIBodyCoder(exiFactory EXIFactory) (*AbstractEXIBodyCoder, erro
 	runtimeURIs := make([]*RuntimeUriContext, gURIs)
 	for i := range gURIs {
 		ctx := grammarContext.GetGrammarUriContextByID(i)
-		fmt.Printf("[DEBUG] ctx[%d] == %+v\n", i, ctx)
 		runtimeURIs[i] = RuntimeUriContextFromContext(ctx)
 	}
 
@@ -616,8 +618,8 @@ func (c *AbstractEXIBodyCoder) getURI(prefix *string) *string {
 
 		for k := range len(ec.nsDeclarations) {
 			ns := ec.nsDeclarations[k]
-			if ns.prefix == prefix || (ns.prefix != nil && prefix != nil && *ns.prefix == *prefix) {
-				return &ns.namespaceURI
+			if ns.Prefix == prefix || (ns.Prefix != nil && prefix != nil && *ns.Prefix == *prefix) {
+				return &ns.NamespaceURI
 			}
 		}
 	}
@@ -635,8 +637,8 @@ func (c *AbstractEXIBodyCoder) getPrefix(uri string) *string {
 
 		for k := range len(ec.nsDeclarations) {
 			ns := ec.nsDeclarations[k]
-			if ns.namespaceURI == uri {
-				return ns.prefix
+			if ns.NamespaceURI == uri {
+				return ns.Prefix
 			}
 		}
 	}
@@ -1806,9 +1808,9 @@ func (e *AbstractEXIBodyEncoder) isTypeValid(datatype Datatype, value Value) (bo
 	return e.typeEncoder.IsValid(datatype, value)
 }
 
-func (e *AbstractEXIBodyEncoder) writeValue(qnc *QNameContext) error {
-	panic("abstract")
-}
+// func (e *AbstractEXIBodyEncoder) WriteValue(qnc *QNameContext) error {
+// 	panic("abstract")
+// }
 
 func (e *AbstractEXIBodyEncoder) encode1stLevelEventCode(pos int) error {
 	codeLength := e.fidelityOptions.Get1stLevelEventCodeLength(e.getCurrentGrammar())
@@ -1902,7 +1904,7 @@ func (e *AbstractEXIBodyEncoder) EncodeEndDocument() error {
 	return nil
 }
 
-func (e *AbstractEXIBodyEncoder) EncodeStartElementByQName(se QName) error {
+func (e *AbstractEXIBodyEncoder) EncodeStartElementByQName(se utils.QName) error {
 	return e.EncodeStartElement(se.Space, se.Local, se.Prefix)
 }
 
@@ -2248,7 +2250,7 @@ func (e *AbstractEXIBodyEncoder) EncodeAttributeList(attributes AttributeList) e
 	// 1. NS
 	for i := range attributes.GetNumberOfNamespaceDeclarations() {
 		ns := attributes.GetNamespaceDeclaration(i)
-		if err := e.EncodeNamespaceDeclaration(ns.namespaceURI, ns.prefix); err != nil {
+		if err := e.EncodeNamespaceDeclaration(ns.NamespaceURI, ns.Prefix); err != nil {
 			return err
 		}
 	}
@@ -2602,7 +2604,7 @@ func (e *AbstractEXIBodyEncoder) EncodeAttributeXsiNil(nilValue Value, pfx *stri
 				return err
 			}
 			//TODO: Check!!!
-			if err := e.writeValue(e.getXsiTypeContext()); err != nil {
+			if err := e.WriteValue(e.getXsiTypeContext()); err != nil {
 				return err
 			}
 		}
@@ -2636,7 +2638,7 @@ func (e *AbstractEXIBodyEncoder) encodeSchemaInvalidAttributeEventCode(eventCode
 	return nil
 }
 
-func (e *AbstractEXIBodyEncoder) EncodeAttributeByQName(at QName, value Value) error {
+func (e *AbstractEXIBodyEncoder) EncodeAttributeByQName(at utils.QName, value Value) error {
 	return e.EncodeAttribute(at.Space, at.Local, at.Prefix, value)
 }
 
@@ -2809,7 +2811,7 @@ func (e *AbstractEXIBodyEncoder) EncodeAttribute(uri, localName string, prefix *
 	// so far: event-code has been written & datatype is settled
 	// the actual value is still missing
 	//TODO: Check!!!
-	if err := e.writeValue(qnc); err != nil {
+	if err := e.WriteValue(qnc); err != nil {
 		return err
 	}
 
@@ -3179,7 +3181,7 @@ func (e *AbstractEXIBodyEncoder) encodeCharactersForce(chars Value) error {
 			return err
 		}
 		//TODO: Check!!!!
-		if err := e.writeValue(e.getElementContext().qnc); err != nil {
+		if err := e.WriteValue(e.getElementContext().qnc); err != nil {
 			return err
 		}
 		e.updateCurrentRule(ei.GetNextGrammar())
@@ -3197,7 +3199,7 @@ func (e *AbstractEXIBodyEncoder) encodeCharactersForce(chars Value) error {
 				return err
 			}
 			//TODO: Check!!!
-			if err := e.writeValue(e.getElementContext().qnc); err != nil {
+			if err := e.WriteValue(e.getElementContext().qnc); err != nil {
 				return err
 			}
 			// update current rule
@@ -3259,7 +3261,7 @@ func (e *AbstractEXIBodyEncoder) encodeCharactersForce(chars Value) error {
 					return err
 				}
 				//TODO: Check!!!
-				if err := e.writeValue(e.getElementContext().qnc); err != nil {
+				if err := e.WriteValue(e.getElementContext().qnc); err != nil {
 					return err
 				}
 				// update current rule
@@ -3470,13 +3472,44 @@ func (d *EXIStreamDecoderImpl) DecodeHeader(reader *bufio.Reader) (EXIBodyDecode
 
 type EXIStreamEncoderImpl struct {
 	EXIStreamEncoder
-	exiHeader *EXIHeaderEncoder
-	exiBody   *EXIBodyEncoder
-	noFactory EXIFactory
+	exiHeader  *EXIHeaderEncoder
+	exiBody    EXIBodyEncoder
+	exiFactory EXIFactory
 }
 
 func NewEXIStreamEncoderImpl(exiFactory EXIFactory) (*EXIStreamEncoderImpl, error) {
-	return nil, nil
+	exiBody, err := exiFactory.CreateEXIBodyEncoder()
+	if err != nil {
+		return nil, err
+	}
+	return &EXIStreamEncoderImpl{
+		exiHeader:  NewEXIHeaderEncoder(),
+		exiBody:    exiBody,
+		exiFactory: exiFactory,
+	}, nil
+}
+
+func (e *EXIStreamEncoderImpl) EncodeHeader(writer *bufio.Writer) (EXIBodyEncoder, error) {
+	// setup & write header
+	headerChannel := NewBitEncoderChannel(writer)
+	if err := e.exiHeader.Write(headerChannel, e.exiFactory); err != nil {
+		return nil, err
+	}
+
+	// setup data-stream for body
+	if e.exiFactory.GetCodingMode() == CodingModeBitPacked {
+		// bit-packed re-uses the header channel
+		if err := e.exiBody.SetOutputChannel(headerChannel); err != nil {
+			return nil, err
+		}
+	} else {
+		channel := NewByteEncoderChannel(writer)
+		if err := e.exiBody.SetOutputChannel(channel); err != nil {
+			return nil, err
+		}
+	}
+
+	return e.exiBody, nil
 }
 
 /*
@@ -3807,12 +3840,15 @@ func NewEXIBodyEncoderInOrder(exiFactory EXIFactory) (*EXIBodyEncoderInOrder, er
 	if err != nil {
 		return nil, err
 	}
-	return &EXIBodyEncoderInOrder{
+	be := &EXIBodyEncoderInOrder{
 		AbstractEXIBodyEncoder: abe,
-	}, nil
+	}
+	abe.EXIBodyEncoder = be
+
+	return be, nil
 }
 
-func (e *EXIBodyEncoderInOrder) SetOutputStream(writer bufio.Writer) error {
+func (e *EXIBodyEncoderInOrder) SetOutputStream(writer *bufio.Writer) error {
 	codingMode := e.exiFactory.GetCodingMode()
 
 	// setup data-stream only
@@ -4139,10 +4175,13 @@ func NewEXIBodyEncoderInOrderSC(exiFactory EXIFactory) (*EXIBodyEncoderInOrderSC
 	if err != nil {
 		return nil, err
 	}
-	return &EXIBodyEncoderInOrderSC{
+	be := &EXIBodyEncoderInOrderSC{
 		EXIBodyEncoderInOrder: ebeio,
 		scEncoder:             nil,
-	}, nil
+	}
+	ebeio.EXIBodyEncoder = be
+
+	return be, nil
 }
 
 func (e *EXIBodyEncoderInOrderSC) InitForEachRun() error {
@@ -4307,7 +4346,7 @@ func (e *EXIBodyEncoderInOrderSC) EncodeAttribute(uri, localName string, prefix 
 	}
 }
 
-func (e *EXIBodyEncoderInOrderSC) EncodeAttributeByQName(at QName, value Value) error {
+func (e *EXIBodyEncoderInOrderSC) EncodeAttributeByQName(at utils.QName, value Value) error {
 	if e.scEncoder == nil {
 		return e.EXIBodyEncoderInOrder.EncodeAttributeByQName(at, value)
 	} else {

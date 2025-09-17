@@ -1,5 +1,7 @@
 package core
 
+import "github.com/sderkacs/exi-go/utils"
+
 type CodingMode int
 
 const (
@@ -109,40 +111,40 @@ type EXIFactory interface {
 	// representations or user-defined datatype representations for representing
 	// specific schema datatypes. This capability is called Datatype
 	// Representation Map.
-	SetDatatypeRepresentationMap(dtpMapTypes *[]QName, dtrMapRepresentations *[]QName)
+	SetDatatypeRepresentationMap(dtpMapTypes *[]utils.QName, dtrMapRepresentations *[]utils.QName)
 
 	// The DTR map representation may use built-in String datatypes (e.g.,
 	// <code>exi:string</code>) or use user-defined type representations. This
 	// method allows to register the datatype that should be used.
-	RegisterDatatypeRepresentationMapDatatype(dtrMapRepresentation QName, datatype Datatype) Datatype
+	RegisterDatatypeRepresentationMapDatatype(dtrMapRepresentation utils.QName, datatype Datatype) Datatype
 
 	// EXI processors MAY provide the capability to specify different built-in
 	// EXI datatype representations or user-defined datatype representations for
 	// representing specific schema datatypes.
-	GetDatatypeRepresentationMapTypes() *[]QName
+	GetDatatypeRepresentationMapTypes() *[]utils.QName
 
 	// EXI processors MAY provide the capability to specify different built-in
 	// EXI datatype representations or user-defined datatype representations for
 	// representing specific schema datatypes.
-	GetDatatypeRepresentationMapRepresentations() *[]QName
+	GetDatatypeRepresentationMapRepresentations() *[]utils.QName
 
 	// Self-contained elements may be read independently from the rest of the
 	// EXI body, allowing them to be indexed for random access. The
 	// "selfContained" element MUST NOT appear in an EXI options document when
 	// one of "compression", "pre-compression" or "strict" elements are present
 	// in the same options document.
-	SetSelfContainedElements(elements []QName)
+	SetSelfContainedElements(elements []utils.QName)
 
 	// Self-contained elements may be read independently from the rest of the
 	// EXI body, allowing them to be indexed for random access. The
 	// "selfContained" element MUST NOT appear in an EXI options document when
 	// one of "compression", "pre-compression" or "strict" elements are present
 	// in the same options document.
-	SetSelfContainedElementsWithHandler(elements []QName, handler SelfContainedHandler)
+	SetSelfContainedElementsWithHandler(elements []utils.QName, handler SelfContainedHandler)
 
 	// Returns boolean value telling whether a certain element is encoded as
 	// selfContained fragment.
-	IsSelfContainedElement(element QName) bool
+	IsSelfContainedElement(element utils.QName) bool
 
 	// Returns selfContained element handler.
 	GetSelfContainedHandler() SelfContainedHandler

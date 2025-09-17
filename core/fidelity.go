@@ -2,6 +2,8 @@ package core
 
 import (
 	"fmt"
+	"maps"
+	"slices"
 
 	"github.com/sderkacs/exi-go/utils"
 )
@@ -731,4 +733,21 @@ func (fo *FidelityOptions) Get3rdLevelCharacteristics() int {
 	}
 
 	return ch
+}
+
+func (fo *FidelityOptions) Equals(other utils.ComparableType) bool {
+	if other == nil {
+		return false
+	}
+	if fo2, ok := other.(*FidelityOptions); ok {
+		so1 := slices.Collect(maps.Keys(fo.options))
+		so2 := slices.Collect(maps.Keys(fo2.options))
+
+		slices.Sort(so1)
+		slices.Sort(so2)
+
+		return slices.Compare(so1, so2) == 0
+	}
+
+	return false
 }

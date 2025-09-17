@@ -1,10 +1,11 @@
 package core
 
 import (
+	"github.com/sderkacs/exi-go/utils"
 	"strings"
 )
 
-func QNameCompareFunc(q1, q2 QName) int {
+func QNameCompareFunc(q1, q2 utils.QName) int {
 	return QNameCompare(q1.Space, q1.Local, q2.Space, q2.Local)
 }
 

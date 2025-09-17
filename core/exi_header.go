@@ -3,6 +3,8 @@ package core
 import (
 	"errors"
 	"fmt"
+
+	"github.com/sderkacs/exi-go/utils"
 )
 
 /*
@@ -74,112 +76,112 @@ func NewEXIOptionsHeaderGrammars() (*EXIOptionsHeaderGrammars, error) {
 	guc0 := NewGrammarUriContext(0, ns0, grammarQNames0, grammarPrefixes0)
 
 	ns1 := "http://www.w3.org/XML/1998/namespace"
-	qnc0 := NewQNameContext(1, 0, QName{Space: ns1, Local: "base"})
-	qnc1 := NewQNameContext(1, 1, QName{Space: ns1, Local: "id"})
-	qnc2 := NewQNameContext(1, 2, QName{Space: ns1, Local: "lang"})
-	qnc3 := NewQNameContext(1, 3, QName{Space: ns1, Local: "space"})
+	qnc0 := NewQNameContext(1, 0, utils.QName{Space: ns1, Local: "base"})
+	qnc1 := NewQNameContext(1, 1, utils.QName{Space: ns1, Local: "id"})
+	qnc2 := NewQNameContext(1, 2, utils.QName{Space: ns1, Local: "lang"})
+	qnc3 := NewQNameContext(1, 3, utils.QName{Space: ns1, Local: "space"})
 	grammarQNames1 := []*QNameContext{qnc0, qnc1, qnc2, qnc3}
 	grammarPrefixes1 := []string{"xml"}
 	guc1 := NewGrammarUriContext(1, ns1, grammarQNames1, grammarPrefixes1)
 
 	ns2 := "http://www.w3.org/2001/XMLSchema-instance"
-	qnc4 := NewQNameContext(2, 0, QName{Space: ns2, Local: "nil"})
-	qnc5 := NewQNameContext(2, 1, QName{Space: ns2, Local: "type"})
+	qnc4 := NewQNameContext(2, 0, utils.QName{Space: ns2, Local: "nil"})
+	qnc5 := NewQNameContext(2, 1, utils.QName{Space: ns2, Local: "type"})
 	grammarQNames2 := []*QNameContext{qnc4, qnc5}
 	grammarPrefixes2 := []string{"xsi"}
 	guc2 := NewGrammarUriContext(2, ns2, grammarQNames2, grammarPrefixes2)
 
 	ns3 := "http://www.w3.org/2001/XMLSchema"
-	qnc6 := NewQNameContext(3, 0, QName{Space: ns3, Local: "ENTITIES"})
-	qnc7 := NewQNameContext(3, 1, QName{Space: ns3, Local: "ENTITY"})
-	qnc8 := NewQNameContext(3, 2, QName{Space: ns3, Local: "ID"})
-	qnc9 := NewQNameContext(3, 3, QName{Space: ns3, Local: "IDREF"})
-	qnc10 := NewQNameContext(3, 4, QName{Space: ns3, Local: "IDREFS"})
-	qnc11 := NewQNameContext(3, 5, QName{Space: ns3, Local: "NCName"})
-	qnc12 := NewQNameContext(3, 6, QName{Space: ns3, Local: "NMTOKEN"})
-	qnc13 := NewQNameContext(3, 7, QName{Space: ns3, Local: "NMTOKENS"})
-	qnc14 := NewQNameContext(3, 8, QName{Space: ns3, Local: "NOTATION"})
-	qnc15 := NewQNameContext(3, 9, QName{Space: ns3, Local: "Name"})
-	qnc16 := NewQNameContext(3, 10, QName{Space: ns3, Local: "QName"})
-	qnc17 := NewQNameContext(3, 11, QName{Space: ns3, Local: "anySimpleType"})
-	qnc18 := NewQNameContext(3, 12, QName{Space: ns3, Local: "anyType"})
-	qnc19 := NewQNameContext(3, 13, QName{Space: ns3, Local: "anyURI"})
-	qnc20 := NewQNameContext(3, 14, QName{Space: ns3, Local: "base64Binary"})
-	qnc21 := NewQNameContext(3, 15, QName{Space: ns3, Local: "boolean"})
-	qnc22 := NewQNameContext(3, 16, QName{Space: ns3, Local: "byte"})
-	qnc23 := NewQNameContext(3, 17, QName{Space: ns3, Local: "date"})
-	qnc24 := NewQNameContext(3, 18, QName{Space: ns3, Local: "dateTime"})
-	qnc25 := NewQNameContext(3, 19, QName{Space: ns3, Local: "decimal"})
-	qnc26 := NewQNameContext(3, 20, QName{Space: ns3, Local: "double"})
-	qnc27 := NewQNameContext(3, 21, QName{Space: ns3, Local: "duration"})
-	qnc28 := NewQNameContext(3, 22, QName{Space: ns3, Local: "float"})
-	qnc29 := NewQNameContext(3, 23, QName{Space: ns3, Local: "gDay"})
-	qnc30 := NewQNameContext(3, 24, QName{Space: ns3, Local: "gMonth"})
-	qnc31 := NewQNameContext(3, 25, QName{Space: ns3, Local: "gMonthDay"})
-	qnc32 := NewQNameContext(3, 26, QName{Space: ns3, Local: "gYear"})
-	qnc33 := NewQNameContext(3, 27, QName{Space: ns3, Local: "gYearMonth"})
-	qnc34 := NewQNameContext(3, 28, QName{Space: ns3, Local: "hexBinary"})
-	qnc35 := NewQNameContext(3, 29, QName{Space: ns3, Local: "int"})
-	qnc36 := NewQNameContext(3, 30, QName{Space: ns3, Local: "integer"})
-	qnc37 := NewQNameContext(3, 31, QName{Space: ns3, Local: "language"})
-	qnc38 := NewQNameContext(3, 32, QName{Space: ns3, Local: "long"})
-	qnc39 := NewQNameContext(3, 33, QName{Space: ns3, Local: "negativeInteger"})
-	qnc40 := NewQNameContext(3, 34, QName{Space: ns3, Local: "nonNegativeInteger"})
-	qnc41 := NewQNameContext(3, 35, QName{Space: ns3, Local: "nonPositiveInteger"})
-	qnc42 := NewQNameContext(3, 36, QName{Space: ns3, Local: "normalizedString"})
-	qnc43 := NewQNameContext(3, 37, QName{Space: ns3, Local: "positiveInteger"})
-	qnc44 := NewQNameContext(3, 38, QName{Space: ns3, Local: "short"})
-	qnc45 := NewQNameContext(3, 39, QName{Space: ns3, Local: "string"})
-	qnc46 := NewQNameContext(3, 40, QName{Space: ns3, Local: "time"})
-	qnc47 := NewQNameContext(3, 41, QName{Space: ns3, Local: "token"})
-	qnc48 := NewQNameContext(3, 42, QName{Space: ns3, Local: "unsignedByte"})
-	qnc49 := NewQNameContext(3, 43, QName{Space: ns3, Local: "unsignedInt"})
-	qnc50 := NewQNameContext(3, 44, QName{Space: ns3, Local: "unsignedLong"})
-	qnc51 := NewQNameContext(3, 45, QName{Space: ns3, Local: "unsignedShort"})
+	qnc6 := NewQNameContext(3, 0, utils.QName{Space: ns3, Local: "ENTITIES"})
+	qnc7 := NewQNameContext(3, 1, utils.QName{Space: ns3, Local: "ENTITY"})
+	qnc8 := NewQNameContext(3, 2, utils.QName{Space: ns3, Local: "ID"})
+	qnc9 := NewQNameContext(3, 3, utils.QName{Space: ns3, Local: "IDREF"})
+	qnc10 := NewQNameContext(3, 4, utils.QName{Space: ns3, Local: "IDREFS"})
+	qnc11 := NewQNameContext(3, 5, utils.QName{Space: ns3, Local: "NCName"})
+	qnc12 := NewQNameContext(3, 6, utils.QName{Space: ns3, Local: "NMTOKEN"})
+	qnc13 := NewQNameContext(3, 7, utils.QName{Space: ns3, Local: "NMTOKENS"})
+	qnc14 := NewQNameContext(3, 8, utils.QName{Space: ns3, Local: "NOTATION"})
+	qnc15 := NewQNameContext(3, 9, utils.QName{Space: ns3, Local: "Name"})
+	qnc16 := NewQNameContext(3, 10, utils.QName{Space: ns3, Local: "QName"})
+	qnc17 := NewQNameContext(3, 11, utils.QName{Space: ns3, Local: "anySimpleType"})
+	qnc18 := NewQNameContext(3, 12, utils.QName{Space: ns3, Local: "anyType"})
+	qnc19 := NewQNameContext(3, 13, utils.QName{Space: ns3, Local: "anyURI"})
+	qnc20 := NewQNameContext(3, 14, utils.QName{Space: ns3, Local: "base64Binary"})
+	qnc21 := NewQNameContext(3, 15, utils.QName{Space: ns3, Local: "boolean"})
+	qnc22 := NewQNameContext(3, 16, utils.QName{Space: ns3, Local: "byte"})
+	qnc23 := NewQNameContext(3, 17, utils.QName{Space: ns3, Local: "date"})
+	qnc24 := NewQNameContext(3, 18, utils.QName{Space: ns3, Local: "dateTime"})
+	qnc25 := NewQNameContext(3, 19, utils.QName{Space: ns3, Local: "decimal"})
+	qnc26 := NewQNameContext(3, 20, utils.QName{Space: ns3, Local: "double"})
+	qnc27 := NewQNameContext(3, 21, utils.QName{Space: ns3, Local: "duration"})
+	qnc28 := NewQNameContext(3, 22, utils.QName{Space: ns3, Local: "float"})
+	qnc29 := NewQNameContext(3, 23, utils.QName{Space: ns3, Local: "gDay"})
+	qnc30 := NewQNameContext(3, 24, utils.QName{Space: ns3, Local: "gMonth"})
+	qnc31 := NewQNameContext(3, 25, utils.QName{Space: ns3, Local: "gMonthDay"})
+	qnc32 := NewQNameContext(3, 26, utils.QName{Space: ns3, Local: "gYear"})
+	qnc33 := NewQNameContext(3, 27, utils.QName{Space: ns3, Local: "gYearMonth"})
+	qnc34 := NewQNameContext(3, 28, utils.QName{Space: ns3, Local: "hexBinary"})
+	qnc35 := NewQNameContext(3, 29, utils.QName{Space: ns3, Local: "int"})
+	qnc36 := NewQNameContext(3, 30, utils.QName{Space: ns3, Local: "integer"})
+	qnc37 := NewQNameContext(3, 31, utils.QName{Space: ns3, Local: "language"})
+	qnc38 := NewQNameContext(3, 32, utils.QName{Space: ns3, Local: "long"})
+	qnc39 := NewQNameContext(3, 33, utils.QName{Space: ns3, Local: "negativeInteger"})
+	qnc40 := NewQNameContext(3, 34, utils.QName{Space: ns3, Local: "nonNegativeInteger"})
+	qnc41 := NewQNameContext(3, 35, utils.QName{Space: ns3, Local: "nonPositiveInteger"})
+	qnc42 := NewQNameContext(3, 36, utils.QName{Space: ns3, Local: "normalizedString"})
+	qnc43 := NewQNameContext(3, 37, utils.QName{Space: ns3, Local: "positiveInteger"})
+	qnc44 := NewQNameContext(3, 38, utils.QName{Space: ns3, Local: "short"})
+	qnc45 := NewQNameContext(3, 39, utils.QName{Space: ns3, Local: "string"})
+	qnc46 := NewQNameContext(3, 40, utils.QName{Space: ns3, Local: "time"})
+	qnc47 := NewQNameContext(3, 41, utils.QName{Space: ns3, Local: "token"})
+	qnc48 := NewQNameContext(3, 42, utils.QName{Space: ns3, Local: "unsignedByte"})
+	qnc49 := NewQNameContext(3, 43, utils.QName{Space: ns3, Local: "unsignedInt"})
+	qnc50 := NewQNameContext(3, 44, utils.QName{Space: ns3, Local: "unsignedLong"})
+	qnc51 := NewQNameContext(3, 45, utils.QName{Space: ns3, Local: "unsignedShort"})
 	grammarQNames3 := []*QNameContext{qnc6, qnc7, qnc8, qnc9, qnc10, qnc11, qnc12, qnc13, qnc14, qnc15, qnc16, qnc17, qnc18, qnc19, qnc20, qnc21, qnc22, qnc23, qnc24, qnc25, qnc26, qnc27, qnc28, qnc29, qnc30, qnc31, qnc32, qnc33, qnc34, qnc35, qnc36, qnc37, qnc38, qnc39, qnc40, qnc41, qnc42, qnc43, qnc44, qnc45, qnc46, qnc47, qnc48, qnc49, qnc50, qnc51}
 	grammarPrefixes3 := []string{}
 	guc3 := NewGrammarUriContext(3, ns3, grammarQNames3, grammarPrefixes3)
 
 	ns4 := "http://www.w3.org/2009/exi"
-	qnc52 := NewQNameContext(4, 0, QName{Space: ns4, Local: "alignment"})
-	qnc53 := NewQNameContext(4, 1, QName{Space: ns4, Local: "base64Binary"})
-	qnc54 := NewQNameContext(4, 2, QName{Space: ns4, Local: "blockSize"})
-	qnc55 := NewQNameContext(4, 3, QName{Space: ns4, Local: "boolean"})
-	qnc56 := NewQNameContext(4, 4, QName{Space: ns4, Local: "byte"})
-	qnc57 := NewQNameContext(4, 5, QName{Space: ns4, Local: "comments"})
-	qnc58 := NewQNameContext(4, 6, QName{Space: ns4, Local: "common"})
-	qnc59 := NewQNameContext(4, 7, QName{Space: ns4, Local: "compression"})
-	qnc60 := NewQNameContext(4, 8, QName{Space: ns4, Local: "datatypeRepresentationMap"})
-	qnc61 := NewQNameContext(4, 9, QName{Space: ns4, Local: "date"})
-	qnc62 := NewQNameContext(4, 10, QName{Space: ns4, Local: "dateTime"})
-	qnc63 := NewQNameContext(4, 11, QName{Space: ns4, Local: "decimal"})
-	qnc64 := NewQNameContext(4, 12, QName{Space: ns4, Local: "double"})
-	qnc65 := NewQNameContext(4, 13, QName{Space: ns4, Local: "dtd"})
-	qnc66 := NewQNameContext(4, 14, QName{Space: ns4, Local: "fragment"})
-	qnc67 := NewQNameContext(4, 15, QName{Space: ns4, Local: "gDay"})
-	qnc68 := NewQNameContext(4, 16, QName{Space: ns4, Local: "gMonth"})
-	qnc69 := NewQNameContext(4, 17, QName{Space: ns4, Local: "gMonthDay"})
-	qnc70 := NewQNameContext(4, 18, QName{Space: ns4, Local: "gYear"})
-	qnc71 := NewQNameContext(4, 19, QName{Space: ns4, Local: "gYearMonth"})
-	qnc72 := NewQNameContext(4, 20, QName{Space: ns4, Local: "header"})
-	qnc73 := NewQNameContext(4, 21, QName{Space: ns4, Local: "hexBinary"})
-	qnc74 := NewQNameContext(4, 22, QName{Space: ns4, Local: "ieeeBinary32"})
-	qnc75 := NewQNameContext(4, 23, QName{Space: ns4, Local: "ieeeBinary64"})
-	qnc76 := NewQNameContext(4, 24, QName{Space: ns4, Local: "integer"})
-	qnc77 := NewQNameContext(4, 25, QName{Space: ns4, Local: "lesscommon"})
-	qnc78 := NewQNameContext(4, 26, QName{Space: ns4, Local: "lexicalValues"})
-	qnc79 := NewQNameContext(4, 27, QName{Space: ns4, Local: "pis"})
-	qnc80 := NewQNameContext(4, 28, QName{Space: ns4, Local: "pre-compress"})
-	qnc81 := NewQNameContext(4, 29, QName{Space: ns4, Local: "prefixes"})
-	qnc82 := NewQNameContext(4, 30, QName{Space: ns4, Local: "preserve"})
-	qnc83 := NewQNameContext(4, 31, QName{Space: ns4, Local: "schemaId"})
-	qnc84 := NewQNameContext(4, 32, QName{Space: ns4, Local: "selfContained"})
-	qnc85 := NewQNameContext(4, 33, QName{Space: ns4, Local: "strict"})
-	qnc86 := NewQNameContext(4, 34, QName{Space: ns4, Local: "string"})
-	qnc87 := NewQNameContext(4, 35, QName{Space: ns4, Local: "time"})
-	qnc88 := NewQNameContext(4, 36, QName{Space: ns4, Local: "uncommon"})
-	qnc89 := NewQNameContext(4, 37, QName{Space: ns4, Local: "valueMaxLength"})
-	qnc90 := NewQNameContext(4, 38, QName{Space: ns4, Local: "valuePartitionCapacity"})
+	qnc52 := NewQNameContext(4, 0, utils.QName{Space: ns4, Local: "alignment"})
+	qnc53 := NewQNameContext(4, 1, utils.QName{Space: ns4, Local: "base64Binary"})
+	qnc54 := NewQNameContext(4, 2, utils.QName{Space: ns4, Local: "blockSize"})
+	qnc55 := NewQNameContext(4, 3, utils.QName{Space: ns4, Local: "boolean"})
+	qnc56 := NewQNameContext(4, 4, utils.QName{Space: ns4, Local: "byte"})
+	qnc57 := NewQNameContext(4, 5, utils.QName{Space: ns4, Local: "comments"})
+	qnc58 := NewQNameContext(4, 6, utils.QName{Space: ns4, Local: "common"})
+	qnc59 := NewQNameContext(4, 7, utils.QName{Space: ns4, Local: "compression"})
+	qnc60 := NewQNameContext(4, 8, utils.QName{Space: ns4, Local: "datatypeRepresentationMap"})
+	qnc61 := NewQNameContext(4, 9, utils.QName{Space: ns4, Local: "date"})
+	qnc62 := NewQNameContext(4, 10, utils.QName{Space: ns4, Local: "dateTime"})
+	qnc63 := NewQNameContext(4, 11, utils.QName{Space: ns4, Local: "decimal"})
+	qnc64 := NewQNameContext(4, 12, utils.QName{Space: ns4, Local: "double"})
+	qnc65 := NewQNameContext(4, 13, utils.QName{Space: ns4, Local: "dtd"})
+	qnc66 := NewQNameContext(4, 14, utils.QName{Space: ns4, Local: "fragment"})
+	qnc67 := NewQNameContext(4, 15, utils.QName{Space: ns4, Local: "gDay"})
+	qnc68 := NewQNameContext(4, 16, utils.QName{Space: ns4, Local: "gMonth"})
+	qnc69 := NewQNameContext(4, 17, utils.QName{Space: ns4, Local: "gMonthDay"})
+	qnc70 := NewQNameContext(4, 18, utils.QName{Space: ns4, Local: "gYear"})
+	qnc71 := NewQNameContext(4, 19, utils.QName{Space: ns4, Local: "gYearMonth"})
+	qnc72 := NewQNameContext(4, 20, utils.QName{Space: ns4, Local: "header"})
+	qnc73 := NewQNameContext(4, 21, utils.QName{Space: ns4, Local: "hexBinary"})
+	qnc74 := NewQNameContext(4, 22, utils.QName{Space: ns4, Local: "ieeeBinary32"})
+	qnc75 := NewQNameContext(4, 23, utils.QName{Space: ns4, Local: "ieeeBinary64"})
+	qnc76 := NewQNameContext(4, 24, utils.QName{Space: ns4, Local: "integer"})
+	qnc77 := NewQNameContext(4, 25, utils.QName{Space: ns4, Local: "lesscommon"})
+	qnc78 := NewQNameContext(4, 26, utils.QName{Space: ns4, Local: "lexicalValues"})
+	qnc79 := NewQNameContext(4, 27, utils.QName{Space: ns4, Local: "pis"})
+	qnc80 := NewQNameContext(4, 28, utils.QName{Space: ns4, Local: "pre-compress"})
+	qnc81 := NewQNameContext(4, 29, utils.QName{Space: ns4, Local: "prefixes"})
+	qnc82 := NewQNameContext(4, 30, utils.QName{Space: ns4, Local: "preserve"})
+	qnc83 := NewQNameContext(4, 31, utils.QName{Space: ns4, Local: "schemaId"})
+	qnc84 := NewQNameContext(4, 32, utils.QName{Space: ns4, Local: "selfContained"})
+	qnc85 := NewQNameContext(4, 33, utils.QName{Space: ns4, Local: "strict"})
+	qnc86 := NewQNameContext(4, 34, utils.QName{Space: ns4, Local: "string"})
+	qnc87 := NewQNameContext(4, 35, utils.QName{Space: ns4, Local: "time"})
+	qnc88 := NewQNameContext(4, 36, utils.QName{Space: ns4, Local: "uncommon"})
+	qnc89 := NewQNameContext(4, 37, utils.QName{Space: ns4, Local: "valueMaxLength"})
+	qnc90 := NewQNameContext(4, 38, utils.QName{Space: ns4, Local: "valuePartitionCapacity"})
 	grammarQNames4 := []*QNameContext{qnc52, qnc53, qnc54, qnc55, qnc56, qnc57, qnc58, qnc59, qnc60, qnc61, qnc62, qnc63, qnc64, qnc65, qnc66, qnc67, qnc68, qnc69, qnc70, qnc71, qnc72, qnc73, qnc74, qnc75, qnc76, qnc77, qnc78, qnc79, qnc80, qnc81, qnc82, qnc83, qnc84, qnc85, qnc86, qnc87, qnc88, qnc89, qnc90}
 	grammarPrefixes4 := []string{}
 	guc4 := NewGrammarUriContext(4, ns4, grammarQNames4, grammarPrefixes4)
@@ -669,8 +671,8 @@ type EXIHeaderDecoder struct {
 	*AbstractEXIHeader
 	lastSE                *QNameContext
 	dtrSection            bool
-	dtrMapTypes           []QName
-	dtrMapRepresentations []QName
+	dtrMapTypes           []utils.QName
+	dtrMapRepresentations []utils.QName
 }
 
 func NewEXIHeaderDecoder() *EXIHeaderDecoder {
@@ -679,16 +681,16 @@ func NewEXIHeaderDecoder() *EXIHeaderDecoder {
 			headerFactory: nil,
 		},
 		dtrSection:            false,
-		dtrMapTypes:           []QName{},
-		dtrMapRepresentations: []QName{},
+		dtrMapTypes:           []utils.QName{},
+		dtrMapRepresentations: []utils.QName{},
 	}
 }
 
 func (d *EXIHeaderDecoder) clear() {
 	d.lastSE = nil
 	d.dtrSection = false
-	d.dtrMapTypes = []QName{}
-	d.dtrMapRepresentations = []QName{}
+	d.dtrMapTypes = []utils.QName{}
+	d.dtrMapRepresentations = []utils.QName{}
 }
 
 func (d *EXIHeaderDecoder) Parse(headerChannel *BitDecoderChannel, noOptionsFactory EXIFactory) (EXIFactory, error) {
@@ -717,7 +719,7 @@ func (d *EXIHeaderDecoder) Parse(headerChannel *BitDecoderChannel, noOptionsFact
 			return nil, errors.New("no valid EXI Cookie ($EXI)")
 		}
 	} else {
-		fmt.Printf("[DEBUG] no EXI cookie header (ch[0] == %02X)\n", ch)
+		//fmt.Printf("[DEBUG] no EXI cookie header (ch[0] == %02X)\n", ch)
 	}
 
 	// An EXI header starts with Distinguishing Bits part, which is a
@@ -900,9 +902,9 @@ func (d *EXIHeaderDecoder) ReadEXIOptions(headerChannel *BitDecoderChannel, noOp
 	}
 
 	if len(d.dtrMapTypes) == len(d.dtrMapRepresentations) && len(d.dtrMapTypes) > 0 {
-		dtrMapTypesA := make([]QName, len(d.dtrMapTypes))
+		dtrMapTypesA := make([]utils.QName, len(d.dtrMapTypes))
 		copy(dtrMapTypesA, d.dtrMapTypes)
-		dtrMapRepresentationsA := make([]QName, len(d.dtrMapRepresentations))
+		dtrMapRepresentationsA := make([]utils.QName, len(d.dtrMapRepresentations))
 		copy(dtrMapRepresentationsA, d.dtrMapRepresentations)
 		exiOptionsFactory.SetDatatypeRepresentationMap(&dtrMapTypesA, &dtrMapRepresentationsA)
 	}

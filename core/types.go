@@ -39,30 +39,30 @@ const (
 )
 
 var (
-	XsdBase64Binary       QName = QName{Space: XMLSchemaNS_URI, Local: "base64Binary"}
-	XsdHexBinary          QName = QName{Space: XMLSchemaNS_URI, Local: "hexBinary"}
-	XsdBoolean            QName = QName{Space: XMLSchemaNS_URI, Local: "boolean"}
-	XsdDateTime           QName = QName{Space: XMLSchemaNS_URI, Local: "dateTime"}
-	XsdTime               QName = QName{Space: XMLSchemaNS_URI, Local: "time"}
-	XsdDate               QName = QName{Space: XMLSchemaNS_URI, Local: "date"}
-	XsdGYearMonth         QName = QName{Space: XMLSchemaNS_URI, Local: "gYearMonth"}
-	XsdGYear              QName = QName{Space: XMLSchemaNS_URI, Local: "gYear"}
-	XsdGMonthDay          QName = QName{Space: XMLSchemaNS_URI, Local: "gMonthDay"}
-	XsdGDay               QName = QName{Space: XMLSchemaNS_URI, Local: "gDay"}
-	XsdGMonth             QName = QName{Space: XMLSchemaNS_URI, Local: "gMonth"}
-	XsdDecimal            QName = QName{Space: XMLSchemaNS_URI, Local: "decimal"}
-	XsdFloat              QName = QName{Space: XMLSchemaNS_URI, Local: "float"}
-	XsdDouble             QName = QName{Space: XMLSchemaNS_URI, Local: "double"}
-	XsdInteger            QName = QName{Space: XMLSchemaNS_URI, Local: "integer"}
-	XsdNonNegativeInteger QName = QName{Space: XMLSchemaNS_URI, Local: "nonNegativeInteger"}
-	XsdString             QName = QName{Space: XMLSchemaNS_URI, Local: "string"}
-	XsdExtendedString     QName = QName{Space: XMLSchemaNS_URI, Local: "estring"}
-	XsdAnySimpleType      QName = QName{Space: XMLSchemaNS_URI, Local: "anySimpleType"}
-	XsdQName              QName = QName{Space: XMLSchemaNS_URI, Local: "QName"}
-	XsdNotation           QName = QName{Space: XMLSchemaNS_URI, Local: "Notation"}
-	DefaultValueName      QName = XsdString
+	XsdBase64Binary       utils.QName = utils.QName{Space: XMLSchemaNS_URI, Local: "base64Binary"}
+	XsdHexBinary          utils.QName = utils.QName{Space: XMLSchemaNS_URI, Local: "hexBinary"}
+	XsdBoolean            utils.QName = utils.QName{Space: XMLSchemaNS_URI, Local: "boolean"}
+	XsdDateTime           utils.QName = utils.QName{Space: XMLSchemaNS_URI, Local: "dateTime"}
+	XsdTime               utils.QName = utils.QName{Space: XMLSchemaNS_URI, Local: "time"}
+	XsdDate               utils.QName = utils.QName{Space: XMLSchemaNS_URI, Local: "date"}
+	XsdGYearMonth         utils.QName = utils.QName{Space: XMLSchemaNS_URI, Local: "gYearMonth"}
+	XsdGYear              utils.QName = utils.QName{Space: XMLSchemaNS_URI, Local: "gYear"}
+	XsdGMonthDay          utils.QName = utils.QName{Space: XMLSchemaNS_URI, Local: "gMonthDay"}
+	XsdGDay               utils.QName = utils.QName{Space: XMLSchemaNS_URI, Local: "gDay"}
+	XsdGMonth             utils.QName = utils.QName{Space: XMLSchemaNS_URI, Local: "gMonth"}
+	XsdDecimal            utils.QName = utils.QName{Space: XMLSchemaNS_URI, Local: "decimal"}
+	XsdFloat              utils.QName = utils.QName{Space: XMLSchemaNS_URI, Local: "float"}
+	XsdDouble             utils.QName = utils.QName{Space: XMLSchemaNS_URI, Local: "double"}
+	XsdInteger            utils.QName = utils.QName{Space: XMLSchemaNS_URI, Local: "integer"}
+	XsdNonNegativeInteger utils.QName = utils.QName{Space: XMLSchemaNS_URI, Local: "nonNegativeInteger"}
+	XsdString             utils.QName = utils.QName{Space: XMLSchemaNS_URI, Local: "string"}
+	XsdExtendedString     utils.QName = utils.QName{Space: XMLSchemaNS_URI, Local: "estring"}
+	XsdAnySimpleType      utils.QName = utils.QName{Space: XMLSchemaNS_URI, Local: "anySimpleType"}
+	XsdQName              utils.QName = utils.QName{Space: XMLSchemaNS_URI, Local: "QName"}
+	XsdNotation           utils.QName = utils.QName{Space: XMLSchemaNS_URI, Local: "Notation"}
+	DefaultValueName      utils.QName = XsdString
 
-	defaultDatatype Datatype = NewStringDatatype(NewQNameContext(-1, -1, QName{}))
+	defaultDatatype Datatype = NewStringDatatype(NewQNameContext(-1, -1, utils.QName{}))
 )
 
 func BuiltInGetDefaultDatatype() Datatype {
@@ -87,23 +87,23 @@ type TypeDecoder interface {
 
 type AbstractTypeCoder struct {
 	TypeCoder
-	dtrMapTypes                  *[]QName
-	dtrMapRepresentations        *[]QName
-	dtrMapRepresentationDatatype *map[QName]Datatype
-	dtrMap                       map[QName]Datatype
+	dtrMapTypes                  *[]utils.QName
+	dtrMapRepresentations        *[]utils.QName
+	dtrMapRepresentationDatatype *map[utils.QName]Datatype
+	dtrMap                       map[utils.QName]Datatype
 	dtrMapInUse                  bool
 }
 
 func NewAbstractTypeCoder(
-	dtrMapTypes *[]QName,
-	dtrMapRepresentations *[]QName,
-	dtrMapRepresentationDatatype *map[QName]Datatype,
+	dtrMapTypes *[]utils.QName,
+	dtrMapRepresentations *[]utils.QName,
+	dtrMapRepresentationDatatype *map[utils.QName]Datatype,
 ) (*AbstractTypeCoder, error) {
 	c := &AbstractTypeCoder{
 		dtrMapTypes:                  dtrMapTypes,
 		dtrMapRepresentations:        dtrMapRepresentations,
 		dtrMapRepresentationDatatype: dtrMapRepresentationDatatype,
-		dtrMap:                       map[QName]Datatype{},
+		dtrMap:                       map[utils.QName]Datatype{},
 		dtrMapInUse:                  (dtrMapTypes != nil),
 	}
 	if dtrMapTypes != nil {
@@ -251,7 +251,7 @@ func (c *AbstractTypeCoder) getDatatypeRepresentation(uri string, localPart stri
 			return nil, fmt.Errorf("[exi] unsupported datatype representation: {%s}%s", uri, localPart)
 		}
 	} else {
-		qn := QName{Space: uri, Local: localPart}
+		qn := utils.QName{Space: uri, Local: localPart}
 		if c.dtrMapRepresentationDatatype != nil {
 			datatype = (*c.dtrMapRepresentationDatatype)[qn]
 		}
@@ -388,9 +388,9 @@ type AbstractTypeEncoder struct {
 	*AbstractTypeCoder
 }
 
-func NewAbstractTypeEncoder(dtrMapTypes *[]QName,
-	dtrMapRepresentations *[]QName,
-	dtrMapRepresentationDatatype *map[QName]Datatype,
+func NewAbstractTypeEncoder(dtrMapTypes *[]utils.QName,
+	dtrMapRepresentations *[]utils.QName,
+	dtrMapRepresentationDatatype *map[utils.QName]Datatype,
 ) (*AbstractTypeEncoder, error) {
 	super, err := NewAbstractTypeCoder(dtrMapTypes, dtrMapRepresentations, dtrMapRepresentationDatatype)
 	if err != nil {
@@ -474,9 +474,9 @@ type AbstractTypeDecoder struct {
 	*AbstractTypeCoder
 }
 
-func NewAbstractTypeDecoder(dtrMapTypes *[]QName,
-	dtrMapRepresentations *[]QName,
-	dtrMapRepresentationDatatype *map[QName]Datatype,
+func NewAbstractTypeDecoder(dtrMapTypes *[]utils.QName,
+	dtrMapRepresentations *[]utils.QName,
+	dtrMapRepresentationDatatype *map[utils.QName]Datatype,
 ) (*AbstractTypeDecoder, error) {
 	super, err := NewAbstractTypeCoder(dtrMapTypes, dtrMapRepresentations, dtrMapRepresentationDatatype)
 	if err != nil {
@@ -583,16 +583,16 @@ type TypedTypeEncoder struct {
 	lastListValues     *ListValue
 }
 
-func NewTypedTypeEncoder(dtrMapTypes *[]QName,
-	dtrMapRepresentations *[]QName,
-	dtrMapRepresentationDatatype *map[QName]Datatype,
+func NewTypedTypeEncoder(dtrMapTypes *[]utils.QName,
+	dtrMapRepresentations *[]utils.QName,
+	dtrMapRepresentationDatatype *map[utils.QName]Datatype,
 ) (*TypedTypeEncoder, error) {
 	return NewTypedTypeEncoderWithNormalize(dtrMapTypes, dtrMapRepresentations, dtrMapRepresentationDatatype, false)
 }
 
-func NewTypedTypeEncoderWithNormalize(dtrMapTypes *[]QName,
-	dtrMapRepresentations *[]QName,
-	dtrMapRepresentationDatatype *map[QName]Datatype,
+func NewTypedTypeEncoderWithNormalize(dtrMapTypes *[]utils.QName,
+	dtrMapRepresentations *[]utils.QName,
+	dtrMapRepresentationDatatype *map[utils.QName]Datatype,
 	doNormalize bool,
 ) (*TypedTypeEncoder, error) {
 	super, err := NewAbstractTypeEncoder(dtrMapTypes, dtrMapRepresentations, dtrMapRepresentationDatatype)
@@ -1127,9 +1127,9 @@ type TypedTypeDecoder struct {
 }
 
 func NewTypedTypeDecoder(
-	dtrMapTypes *[]QName,
-	dtrMapRepresentations *[]QName,
-	dtrMapRepresentationDatatype *map[QName]Datatype,
+	dtrMapTypes *[]utils.QName,
+	dtrMapRepresentations *[]utils.QName,
+	dtrMapRepresentationDatatype *map[utils.QName]Datatype,
 ) (*TypedTypeDecoder, error) {
 	decoder, err := NewAbstractTypeDecoder(dtrMapTypes, dtrMapRepresentations, dtrMapRepresentationDatatype)
 	if err != nil {
@@ -1421,9 +1421,9 @@ type LexicalTypeDecoder struct {
 }
 
 func NewLexicalTypeDecoder(
-	dtrMapTypes *[]QName,
-	dtrMapRepresentations *[]QName,
-	dtrMapRepresentationDatatype *map[QName]Datatype,
+	dtrMapTypes *[]utils.QName,
+	dtrMapRepresentations *[]utils.QName,
+	dtrMapRepresentationDatatype *map[utils.QName]Datatype,
 ) (*LexicalTypeDecoder, error) {
 	decoder, err := NewAbstractTypeDecoder(dtrMapTypes, dtrMapRepresentations, dtrMapRepresentationDatatype)
 	if err != nil {
@@ -1500,9 +1500,9 @@ type LexicalTypeEncoder struct {
 }
 
 func NewLexicalTypeEncoder(
-	dtrMapTypes *[]QName,
-	dtrMapRepresentations *[]QName,
-	dtrMapRepresentationDatatype *map[QName]Datatype,
+	dtrMapTypes *[]utils.QName,
+	dtrMapRepresentations *[]utils.QName,
+	dtrMapRepresentationDatatype *map[utils.QName]Datatype,
 ) (*LexicalTypeEncoder, error) {
 	encoder, err := NewAbstractTypeEncoder(dtrMapTypes, dtrMapRepresentations, dtrMapRepresentationDatatype)
 	if err != nil {

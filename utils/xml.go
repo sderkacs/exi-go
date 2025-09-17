@@ -5,6 +5,12 @@ import (
 	"strings"
 )
 
+type QName struct {
+	Space  string
+	Local  string
+	Prefix *string
+}
+
 const (
 	XMLWhiteSpaceSpace byte = ' '
 	XMLWhiteSpaceNL    byte = '\n'
@@ -126,4 +132,8 @@ func GetLocalPart(qname string) string {
 	} else {
 		return qname[index+1:]
 	}
+}
+
+func CheckQualifiedName(qname QName, namespaceURI, localName string) bool {
+	return qname.Local == localName && qname.Space == namespaceURI
 }

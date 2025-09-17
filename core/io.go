@@ -246,11 +246,11 @@ const (
 type BitWriter struct {
 	buffer   int
 	capacity int
-	writer   bufio.Writer
+	writer   *bufio.Writer
 	len      int
 }
 
-func NewBitWriter(writer bufio.Writer) *BitWriter {
+func NewBitWriter(writer *bufio.Writer) *BitWriter {
 	return &BitWriter{
 		buffer:   0,
 		capacity: BitsInByte,
@@ -263,7 +263,7 @@ func NewBitWriter(writer bufio.Writer) *BitWriter {
  * Returns a reference to underlying output stream.
  */
 func (w *BitWriter) GetUnderlyingWriter() *bufio.Writer {
-	return &w.writer
+	return w.writer
 }
 
 func (w *BitWriter) GetLength() int {

@@ -44,17 +44,34 @@ func (p *AbstractProduction) Duplicate() Production {
 }
 
 type SchemaInformedProduction struct {
-	*AbstractProduction
+	next      Grammar
+	eventCode int
+	event     Event
 }
 
 func NewSchemaInformedProduction(next Grammar, event Event, eventCode int) *SchemaInformedProduction {
-	ap := NewAbstractProduction(next, event, eventCode)
 	sip := &SchemaInformedProduction{
-		AbstractProduction: ap,
+		next:      next,
+		eventCode: eventCode,
+		event:     event,
 	}
-	ap.Production = sip
 
 	return sip
+}
+func (p *SchemaInformedProduction) GetEvent() Event {
+	return p.event
+}
+
+func (p *SchemaInformedProduction) GetNextGrammar() Grammar {
+	return p.next
+}
+
+func (p *SchemaInformedProduction) Duplicate() Production {
+	return &SchemaInformedProduction{
+		next:      p.next,
+		eventCode: p.eventCode,
+		event:     p.event,
+	}
 }
 
 func (p *SchemaInformedProduction) GetEventCode() int {
@@ -62,19 +79,38 @@ func (p *SchemaInformedProduction) GetEventCode() int {
 }
 
 type SchemaLessProduction struct {
-	*AbstractProduction
-	parent Grammar
+	next      Grammar
+	eventCode int
+	event     Event
+	parent    Grammar
 }
 
 func NewSchemaLessProduction(parent, next Grammar, event Event, eventCode int) *SchemaLessProduction {
-	ap := NewAbstractProduction(next, event, eventCode)
 	slp := &SchemaLessProduction{
-		AbstractProduction: ap,
-		parent:             parent,
+		next:      next,
+		eventCode: eventCode,
+		event:     event,
+		parent:    parent,
 	}
-	ap.Production = slp
 
 	return slp
+}
+
+func (p *SchemaLessProduction) GetEvent() Event {
+	return p.event
+}
+
+func (p *SchemaLessProduction) GetNextGrammar() Grammar {
+	return p.next
+}
+
+func (p *SchemaLessProduction) Duplicate() Production {
+	return &SchemaLessProduction{
+		next:      p.next,
+		eventCode: p.eventCode,
+		event:     p.event,
+		parent:    p.parent,
+	}
 }
 
 func (p *SchemaLessProduction) GetEventCode() int {

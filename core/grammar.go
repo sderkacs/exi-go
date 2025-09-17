@@ -161,7 +161,7 @@ func (g *AbstractGrammar) GetElementContentGrammar() Grammar {
 	return g
 }
 
-func (g *AbstractGrammar) checkQualifiedName(c QName, namespaceUri, localName string) bool {
+func (g *AbstractGrammar) checkQualifiedName(c utils.QName, namespaceUri, localName string) bool {
 	return c.Local == localName && c.Space == namespaceUri
 }
 
@@ -372,7 +372,7 @@ func (g *AbstractSchemaInformedGrammar) GetProduction(eventType EventType) Produ
 func (g *AbstractSchemaInformedGrammar) GetStartElementProduction(namespaceUri, localName string) Production {
 	for _, ei := range g.containers {
 		if ei.GetEvent().IsEventType(EventTypeStartElement) {
-			seEI := ei.GetEvent().(StartElement)
+			seEI := ei.GetEvent().(*StartElement)
 			if g.checkQualifiedName(seEI.qname, namespaceUri, localName) {
 				return ei
 			}
@@ -542,7 +542,7 @@ func (g *AbstractBuiltInGrammar) isExiProfileGhostNode(ei Production) bool {
 func (g *AbstractBuiltInGrammar) GetStartElementProduction(namespaceUri, localName string) Production {
 	for _, ei := range g.containers {
 		if ei.GetEvent().IsEventType(EventTypeStartElement) {
-			seEI := ei.GetEvent().(StartElement)
+			seEI := ei.GetEvent().(*StartElement)
 			if g.checkQualifiedName(seEI.GetQName(), namespaceUri, localName) {
 				if !g.isExiProfileGhostNode(ei) {
 					return ei
@@ -1029,7 +1029,7 @@ type SchemaInformedFirstStartTag struct {
 	isTypeCastable bool
 	isNillable     bool
 	typeEmpty      SchemaInformedFirstStartTagGrammar
-	typeName       *QName
+	typeName       *utils.QName
 }
 
 func NewSchemaInformedFirstStartTag() *SchemaInformedFirstStartTag {

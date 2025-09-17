@@ -5,14 +5,14 @@ package core
 */
 
 type NamespaceDeclarationContainer struct {
-	namespaceURI string
-	prefix       *string
+	NamespaceURI string
+	Prefix       *string
 }
 
 func NewNamespaceDeclarationContainer(namespaceURI string, prefix *string) NamespaceDeclarationContainer {
 	return NamespaceDeclarationContainer{
-		namespaceURI: namespaceURI,
-		prefix:       prefix,
+		NamespaceURI: namespaceURI,
+		Prefix:       prefix,
 	}
 }
 

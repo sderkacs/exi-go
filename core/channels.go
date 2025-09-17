@@ -86,7 +86,7 @@ type EncoderChannel interface {
 	// Align to next byte-aligned boundary in the stream if it is not
 	// already at such a boundary
 	Align() error
-	EncodeInt(b int) error
+	Encode(b int) error
 	EncodeBytes(b []byte, offset, length int) error
 	EncodeNBitUnsignedInteger(b, n int) error
 
@@ -684,37 +684,37 @@ func (c *AbstractEncoderChannel) EncodeUnsignedInteger(n int) error {
 
 	if n < 128 {
 		// write byte as is
-		return c.EncodeInt(n)
+		return c.Encode(n)
 	} else {
 		n7BitBlocks := utils.NumberOf7BitBlocksToRepresent32(uint(n))
 
 		switch n7BitBlocks {
 		case 5:
-			if err := c.EncodeInt(128 | n); err != nil {
+			if err := c.Encode(128 | n); err != nil {
 				return err
 			}
 			n = int(uint32(n) >> 7)
 			fallthrough
 		case 4:
-			if err := c.EncodeInt(128 | n); err != nil {
+			if err := c.Encode(128 | n); err != nil {
 				return err
 			}
 			n = int(uint32(n) >> 7)
 			fallthrough
 		case 3:
-			if err := c.EncodeInt(128 | n); err != nil {
+			if err := c.Encode(128 | n); err != nil {
 				return err
 			}
 			n = int(uint32(n) >> 7)
 			fallthrough
 		case 2:
-			if err := c.EncodeInt(128 | n); err != nil {
+			if err := c.Encode(128 | n); err != nil {
 				return err
 			}
 			n = int(uint32(n) >> 7)
 			fallthrough
 		case 1:
-			return c.EncodeInt(0 | n)
+			return c.Encode(0 | n)
 		}
 	}
 
@@ -730,14 +730,14 @@ func (c *AbstractEncoderChannel) encodeUnsignedLong(l int64) error {
 	l = int64(uint64(l) >> 7)
 
 	for l != 0 {
-		if err := c.EncodeInt(lastEncode | 128); err != nil {
+		if err := c.Encode(lastEncode | 128); err != nil {
 			return err
 		}
 		lastEncode = int(l)
 		l = int64(uint64(l) >> 7)
 	}
 
-	return c.EncodeInt(lastEncode)
+	return c.Encode(lastEncode)
 }
 
 func (c *AbstractEncoderChannel) encodeUnsignedBigInteger(bi *big.Int) error {
@@ -759,7 +759,7 @@ func (c *AbstractEncoderChannel) encodeUnsignedBigInteger(bi *big.Int) error {
 
 		// 1XXXXXXX ... 1XXXXXXX
 		value := int(biCopy.Int64()&0x7F) | 128
-		if err := c.EncodeInt(value); err != nil {
+		if err := c.Encode(value); err != nil {
 			return err
 		}
 
@@ -767,7 +767,7 @@ func (c *AbstractEncoderChannel) encodeUnsignedBigInteger(bi *big.Int) error {
 	}
 
 	// 0XXXXXXX
-	return c.EncodeInt(int(biCopy.Int64() & 0x7F))
+	return c.Encode(int(biCopy.Int64() & 0x7F))
 }
 
 func (c *AbstractEncoderChannel) EncodeUnsignedIntegerValue(iv *IntegerValue) error {
@@ -955,12 +955,13 @@ type BitEncoderChannel struct {
 	writer *BitWriter
 }
 
-func NewBitEncoderChannel(writer bufio.Writer) *BitEncoderChannel {
+func NewBitEncoderChannel(writer *bufio.Writer) *BitEncoderChannel {
 	aec := NewAbstractEncoderChannel()
 	bec := &BitEncoderChannel{
 		AbstractEncoderChannel: aec,
 		writer:                 NewBitWriter(writer),
 	}
+	aec.EncoderChannel = bec
 	return bec
 }
 
@@ -1136,11 +1137,11 @@ func (c *ByteDecoderChannel) DecodeBinary() ([]byte, error) {
 
 type ByteEncoderChannel struct {
 	*AbstractEncoderChannel
-	writer bufio.Writer
+	writer *bufio.Writer
 	len    int
 }
 
-func NewByteEncoderChannel(writer bufio.Writer) *ByteEncoderChannel {
+func NewByteEncoderChannel(writer *bufio.Writer) *ByteEncoderChannel {
 	aec := NewAbstractEncoderChannel()
 	bec := &ByteEncoderChannel{
 		AbstractEncoderChannel: aec,
@@ -1151,7 +1152,7 @@ func NewByteEncoderChannel(writer bufio.Writer) *ByteEncoderChannel {
 }
 
 func (c *ByteEncoderChannel) GetWriter() *bufio.Writer {
-	return &c.writer
+	return c.writer
 }
 
 func (c *ByteEncoderChannel) GetLength() int {

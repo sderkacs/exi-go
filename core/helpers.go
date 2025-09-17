@@ -2,6 +2,8 @@ package core
 
 import (
 	"errors"
+
+	"github.com/sderkacs/exi-go/utils"
 )
 
 /*
@@ -33,10 +35,10 @@ type DefaultEXIFactory struct {
 	encodingOptions                       *EncodingOptions
 	decodingOptions                       *DecodingOptions
 	schemaIDResolver                      SchemaIDResolver
-	dtrMapTypes                           *[]QName
-	dtrMapRepresentations                 *[]QName
-	dtrMapRepresentationsDatatype         map[QName]Datatype
-	scElements                            []QName
+	dtrMapTypes                           *[]utils.QName
+	dtrMapRepresentations                 *[]utils.QName
+	dtrMapRepresentationsDatatype         map[utils.QName]Datatype
+	scElements                            []utils.QName
 	scHandler                             SelfContainedHandler
 	blockSize                             int
 	valueMaxLength                        int
@@ -47,7 +49,7 @@ type DefaultEXIFactory struct {
 	grammarLearningDisabled               bool
 	sharedStrings                         []string
 	isUsingNonEvolvingGrammrs             bool
-	qnameSort                             func(q1, q2 QName) int
+	qnameSort                             func(q1, q2 utils.QName) int
 }
 
 func NewDefaultEXIFactory() *DefaultEXIFactory {
@@ -62,7 +64,7 @@ func NewDefaultEXIFactory() *DefaultEXIFactory {
 		dtrMapTypes:                           nil,
 		dtrMapRepresentations:                 nil,
 		dtrMapRepresentationsDatatype:         nil,
-		scElements:                            []QName{},
+		scElements:                            []utils.QName{},
 		scHandler:                             nil,
 		blockSize:                             DefaultBlockSize,
 		valueMaxLength:                        DefaultValueMaxLength,
@@ -163,7 +165,7 @@ func (f *DefaultEXIFactory) GetValuePartitionCapacity() int {
 	return f.valuePartitionCapacity
 }
 
-func (f *DefaultEXIFactory) SetDatatypeRepresentationMap(dtpMapTypes *[]QName, dtrMapRepresentations *[]QName) {
+func (f *DefaultEXIFactory) SetDatatypeRepresentationMap(dtpMapTypes *[]utils.QName, dtrMapRepresentations *[]utils.QName) {
 	if dtpMapTypes == nil || dtrMapRepresentations == nil || len(*dtpMapTypes) != len(*dtrMapRepresentations) || len(*dtpMapTypes) == 0 {
 		// un-set dtrMap
 		f.dtrMapTypes = nil
@@ -174,31 +176,31 @@ func (f *DefaultEXIFactory) SetDatatypeRepresentationMap(dtpMapTypes *[]QName, d
 	}
 }
 
-func (f *DefaultEXIFactory) RegisterDatatypeRepresentationMapDatatype(dtrMapRepresentation QName, datatype Datatype) Datatype {
-	f.dtrMapRepresentationsDatatype = map[QName]Datatype{}
+func (f *DefaultEXIFactory) RegisterDatatypeRepresentationMapDatatype(dtrMapRepresentation utils.QName, datatype Datatype) Datatype {
+	f.dtrMapRepresentationsDatatype = map[utils.QName]Datatype{}
 	prev := f.dtrMapRepresentationsDatatype[dtrMapRepresentation]
 	f.dtrMapRepresentationsDatatype[dtrMapRepresentation] = datatype
 	return prev
 }
 
-func (f *DefaultEXIFactory) GetDatatypeRepresentationMapTypes() *[]QName {
+func (f *DefaultEXIFactory) GetDatatypeRepresentationMapTypes() *[]utils.QName {
 	return f.dtrMapTypes
 }
 
-func (f *DefaultEXIFactory) GetDatatypeRepresentationMapRepresentations() *[]QName {
+func (f *DefaultEXIFactory) GetDatatypeRepresentationMapRepresentations() *[]utils.QName {
 	return f.dtrMapRepresentations
 }
 
-func (f *DefaultEXIFactory) SetSelfContainedElements(elements []QName) {
+func (f *DefaultEXIFactory) SetSelfContainedElements(elements []utils.QName) {
 	f.SetSelfContainedElementsWithHandler(elements, nil)
 }
 
-func (f *DefaultEXIFactory) SetSelfContainedElementsWithHandler(elements []QName, handler SelfContainedHandler) {
+func (f *DefaultEXIFactory) SetSelfContainedElementsWithHandler(elements []utils.QName, handler SelfContainedHandler) {
 	f.scElements = elements
 	f.scHandler = handler
 }
 
-func (f *DefaultEXIFactory) IsSelfContainedElement(element QName) bool {
+func (f *DefaultEXIFactory) IsSelfContainedElement(element utils.QName) bool {
 	for _, e := range f.scElements {
 		if e == element {
 			return true
@@ -324,11 +326,11 @@ func (f *DefaultEXIFactory) updateFactoryAccordingCanonicalEXI() error {
 	return nil
 }
 
-func (f *DefaultEXIFactory) bubbleSort(dtrMapTypes, dtrMapRepresentations *[]QName) {
+func (f *DefaultEXIFactory) bubbleSort(dtrMapTypes, dtrMapRepresentations *[]utils.QName) {
 	swapped := true
 	j := 0
-	var tmpType QName
-	var tmpRep QName
+	var tmpType utils.QName
+	var tmpRep utils.QName
 
 	for swapped {
 		swapped = false
