@@ -1,5 +1,7 @@
 package core
 
+import "github.com/sderkacs/exi-go/utils"
+
 type EventType int
 
 const (
@@ -63,29 +65,29 @@ func (e *AbstractEvent) IsEventType(eventType EventType) bool {
 }
 
 func (e *AbstractEvent) Equals(other Event) bool {
-	if e == other {
-		return true
+	if other == nil {
+		return false
 	}
-
-	if e.eventType == other.GetEventType() {
-		return true
-	}
-
-	return false
+	return e.eventType == other.GetEventType()
 }
 
 type AbstractDatatypeEvent struct {
-	AbstractEvent
+	*AbstractEvent
 	datatype Datatype
 }
 
+func (e *AbstractDatatypeEvent) GetDatatype() Datatype {
+	return e.datatype
+}
+
+// Back-compat with earlier naming used in ported code
 func (e *AbstractDatatypeEvent) GetDataType() Datatype {
 	return e.datatype
 }
 
 type Attribute struct {
 	*AbstractDatatypeEvent
-	qname        QName
+	qname        utils.QName
 	qnameContext *QNameContext
 }
 
@@ -94,37 +96,36 @@ func NewAttribute(qnc *QNameContext) *Attribute {
 }
 
 func NewAttributeWithDatatype(qnc *QNameContext, datatype Datatype) *Attribute {
-	return &Attribute{
+	as := &AbstractEvent{
+		eventType: EventTypeAttribute,
+	}
+	a := &Attribute{
 		AbstractDatatypeEvent: &AbstractDatatypeEvent{
-			AbstractEvent: AbstractEvent{
-				eventType: EventTypeAttribute,
-			},
-			datatype: datatype,
+			AbstractEvent: as,
+			datatype:      datatype,
 		},
 		qnameContext: qnc,
 		qname:        qnc.GetQName(),
 	}
+	as.Event = a
+	return a
 }
 
 func (a *Attribute) GetQNameContext() *QNameContext {
 	return a.qnameContext
 }
 
-func (a *Attribute) GetQName() QName {
+func (a *Attribute) GetQName() utils.QName {
 	return a.qname
 }
 
 func (a *Attribute) Equals(other Event) bool {
-	if a == other {
-		return true
-	}
 	otherA, ok := other.(*Attribute)
 	if ok {
 		if a.qname.Local == otherA.qname.Local && a.qname.Space == otherA.qname.Space {
 			return true
 		}
 	}
-
 	return false
 }
 
@@ -133,11 +134,15 @@ type AttributeGeneric struct {
 }
 
 func NewAttributeGeneric() *AttributeGeneric {
-	return &AttributeGeneric{
-		AbstractEvent: &AbstractEvent{
-			eventType: EventTypeAttributeGeneric,
-		},
+	as := &AbstractEvent{
+		eventType: EventTypeAttributeGeneric,
 	}
+	a := &AttributeGeneric{
+		AbstractEvent: as,
+	}
+	as.Event = a
+
+	return a
 }
 
 type AttributeNS struct {
@@ -147,13 +152,16 @@ type AttributeNS struct {
 }
 
 func NewAttributeNS(namespaceUriID int, namespaceUri string) *AttributeNS {
-	return &AttributeNS{
-		AbstractEvent: &AbstractEvent{
-			eventType: EventTypeAttributeNS,
-		},
+	as := &AbstractEvent{
+		eventType: EventTypeAttributeNS,
+	}
+	a := &AttributeNS{
+		AbstractEvent:  as,
 		namespaceUriID: namespaceUriID,
 		namespaceUri:   namespaceUri,
 	}
+	as.Event = a
+	return a
 }
 
 func (a *AttributeNS) GetNamespaceUri() string {
@@ -169,14 +177,18 @@ type Characters struct {
 }
 
 func NewCharacters(datatype Datatype) *Characters {
-	return &Characters{
+	as := &AbstractEvent{
+		eventType: EventTypeCharacters,
+	}
+	a := &Characters{
 		AbstractDatatypeEvent: &AbstractDatatypeEvent{
-			AbstractEvent: AbstractEvent{
-				eventType: EventTypeCharacters,
-			},
-			datatype: datatype,
+			AbstractEvent: as,
+			datatype:      datatype,
 		},
 	}
+	as.Event = a
+
+	return a
 }
 
 type CharactersGeneric struct {
@@ -184,14 +196,17 @@ type CharactersGeneric struct {
 }
 
 func NewCharactersGeneric() *CharactersGeneric {
-	return &CharactersGeneric{
+	as := &AbstractEvent{
+		eventType: EventTypeCharactersGeneric,
+	}
+	a := &CharactersGeneric{
 		AbstractDatatypeEvent: &AbstractDatatypeEvent{
-			AbstractEvent: AbstractEvent{
-				eventType: EventTypeCharactersGeneric,
-			},
-			datatype: BuiltInGetDefaultDatatype(),
+			AbstractEvent: as,
+			datatype:      BuiltInGetDefaultDatatype(),
 		},
 	}
+	as.Event = a
+	return a
 }
 
 type Comment struct {
@@ -199,11 +214,14 @@ type Comment struct {
 }
 
 func NewComment() *Comment {
-	return &Comment{
-		AbstractEvent: &AbstractEvent{
-			eventType: EventTypeComment,
-		},
+	as := &AbstractEvent{
+		eventType: EventTypeComment,
 	}
+	a := &Comment{
+		AbstractEvent: as,
+	}
+	as.Event = a
+	return a
 }
 
 type DocType struct {
@@ -211,11 +229,14 @@ type DocType struct {
 }
 
 func NewDocType() *DocType {
-	return &DocType{
-		AbstractEvent: &AbstractEvent{
-			eventType: EventTypeDocType,
-		},
+	as := &AbstractEvent{
+		eventType: EventTypeDocType,
 	}
+	a := &DocType{
+		AbstractEvent: as,
+	}
+	as.Event = a
+	return a
 }
 
 type EndDocument struct {
@@ -223,11 +244,14 @@ type EndDocument struct {
 }
 
 func NewEndDocument() *EndDocument {
-	return &EndDocument{
-		AbstractEvent: &AbstractEvent{
-			eventType: EventTypeEndDocument,
-		},
+	as := &AbstractEvent{
+		eventType: EventTypeEndDocument,
 	}
+	a := &EndDocument{
+		AbstractEvent: as,
+	}
+	as.Event = a
+	return a
 }
 
 type EndElement struct {
@@ -235,11 +259,14 @@ type EndElement struct {
 }
 
 func NewEndElement() *EndElement {
-	return &EndElement{
-		AbstractEvent: &AbstractEvent{
-			eventType: EventTypeEndElement,
-		},
+	as := &AbstractEvent{
+		eventType: EventTypeEndElement,
 	}
+	a := &EndElement{
+		AbstractEvent: as,
+	}
+	as.Event = a
+	return a
 }
 
 type EntityReference struct {
@@ -247,11 +274,14 @@ type EntityReference struct {
 }
 
 func NewEntityReference() *EntityReference {
-	return &EntityReference{
-		AbstractEvent: &AbstractEvent{
-			eventType: EventTypeEntityReference,
-		},
+	as := &AbstractEvent{
+		eventType: EventTypeEntityReference,
 	}
+	a := &EntityReference{
+		AbstractEvent: as,
+	}
+	as.Event = a
+	return a
 }
 
 type NamespaceDeclaration struct {
@@ -259,11 +289,14 @@ type NamespaceDeclaration struct {
 }
 
 func NewNamespaceDeclaration() *NamespaceDeclaration {
-	return &NamespaceDeclaration{
-		AbstractEvent: &AbstractEvent{
-			eventType: EventTypeNamespaceDeclaration,
-		},
+	as := &AbstractEvent{
+		eventType: EventTypeNamespaceDeclaration,
 	}
+	a := &NamespaceDeclaration{
+		AbstractEvent: as,
+	}
+	as.Event = a
+	return a
 }
 
 type ProcessingInstruction struct {
@@ -271,11 +304,14 @@ type ProcessingInstruction struct {
 }
 
 func NewProcessingInstruction() *ProcessingInstruction {
-	return &ProcessingInstruction{
-		AbstractEvent: &AbstractEvent{
-			eventType: EventTypeProcessingInstruction,
-		},
+	as := &AbstractEvent{
+		eventType: EventTypeProcessingInstruction,
 	}
+	a := &ProcessingInstruction{
+		AbstractEvent: as,
+	}
+	as.Event = a
+	return a
 }
 
 type SelfContained struct {
@@ -283,11 +319,14 @@ type SelfContained struct {
 }
 
 func NewSelfContained() *SelfContained {
-	return &SelfContained{
-		AbstractEvent: &AbstractEvent{
-			eventType: EventTypeSelfContained,
-		},
+	as := &AbstractEvent{
+		eventType: EventTypeSelfContained,
 	}
+	a := &SelfContained{
+		AbstractEvent: as,
+	}
+	as.Event = a
+	return a
 }
 
 type StartDocument struct {
@@ -295,28 +334,34 @@ type StartDocument struct {
 }
 
 func NewStartDocument() *StartDocument {
-	return &StartDocument{
-		AbstractEvent: &AbstractEvent{
-			eventType: EventTypeStartDocument,
-		},
+	as := &AbstractEvent{
+		eventType: EventTypeStartDocument,
 	}
+	a := &StartDocument{
+		AbstractEvent: as,
+	}
+	as.Event = a
+	return a
 }
 
 type StartElement struct {
 	*AbstractEvent
-	qname        QName
+	qname        utils.QName
 	qnameContext *QNameContext
 	grammar      Grammar
 }
 
 func NewStartElement(qnc *QNameContext) *StartElement {
-	return &StartElement{
-		AbstractEvent: &AbstractEvent{
-			eventType: EventTypeStartElement,
-		},
-		qnameContext: qnc,
-		qname:        qnc.qName,
+	as := &AbstractEvent{
+		eventType: EventTypeStartElement,
 	}
+	a := &StartElement{
+		AbstractEvent: as,
+		qnameContext:  qnc,
+		qname:         qnc.qName,
+	}
+	as.Event = a
+	return a
 }
 
 func NewStartElementWithGrammar(qnc *QNameContext, grammar Grammar) *StartElement {
@@ -329,7 +374,7 @@ func (e *StartElement) GetQNameContext() *QNameContext {
 	return e.qnameContext
 }
 
-func (e *StartElement) GetQName() QName {
+func (e *StartElement) GetQName() utils.QName {
 	return e.qname
 }
 
@@ -341,16 +386,32 @@ func (e *StartElement) GetGrammar() Grammar {
 	return e.grammar
 }
 
+func (e *StartElement) Equals(other Event) bool {
+	if other == nil {
+		return false
+	}
+	otherA, ok := other.(*StartElement)
+	if ok {
+		if e.qnameContext.Equals(otherA.qnameContext) {
+			return true
+		}
+	}
+	return false
+}
+
 type StartElementGeneric struct {
 	*AbstractEvent
 }
 
 func NewStartElementGeneric() *StartElementGeneric {
-	return &StartElementGeneric{
-		AbstractEvent: &AbstractEvent{
-			eventType: EventTypeStartElementGeneric,
-		},
+	as := &AbstractEvent{
+		eventType: EventTypeStartElementGeneric,
 	}
+	a := &StartElementGeneric{
+		AbstractEvent: as,
+	}
+	as.Event = a
+	return a
 }
 
 type StartElementNS struct {
@@ -360,13 +421,16 @@ type StartElementNS struct {
 }
 
 func NewStartElementNS(namespaceUriID int, namespaceUri string) *StartElementNS {
-	return &StartElementNS{
-		AbstractEvent: &AbstractEvent{
-			eventType: EventTypeStartElementNS,
-		},
+	as := &AbstractEvent{
+		eventType: EventTypeStartElementNS,
+	}
+	a := &StartElementNS{
+		AbstractEvent:  as,
 		namespaceUriID: namespaceUriID,
 		namespaceUri:   namespaceUri,
 	}
+	as.Event = a
+	return a
 }
 
 func (e *StartElementNS) GetNamespaceUri() string {
