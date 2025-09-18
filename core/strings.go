@@ -259,6 +259,7 @@ func (sd *StringDecoderImpl) SetSharedStrings(sharedStrings []string) error {
 */
 
 type StringEncoderImpl struct {
+	StringEncoder
 	*AbstractStringCoder
 	stringValues map[string]ValueContainer
 }
@@ -274,17 +275,12 @@ func NewStringEncoderImplWithInitialQNameLists(localValuePartitions bool, initia
 	}
 }
 
-func (se *StringEncoderImpl) AddValue(qnc *QNameContext, value string) error {
-	if utils.ContainsKey(se.stringValues, value) {
-		panic("attempt to add dupplicate global string value")
-	}
+func (se *StringEncoderImpl) GetNumberOfStringValues(qnc *QNameContext) int {
+	return se.AbstractStringCoder.GetNumberOfStringValues(qnc)
+}
 
-	// global context
-	se.stringValues[value] = NewValueContainer(value, qnc, se.GetNumberOfStringValues(qnc), len(se.stringValues))
-	// local context
-	se.addLocalValue(qnc, NewStringValueFromString(value))
-
-	return nil
+func (se *StringEncoderImpl) IsLocalValuePartitions() bool {
+	return se.AbstractStringCoder.IsLocalValuePartitions()
 }
 
 func (se *StringEncoderImpl) WriteValue(qnc *QNameContext, channel EncoderChannel, value string) error {
@@ -396,13 +392,18 @@ func NewBoundedStringDecoderImpl(localValuePartitions bool, valueMaxLength, valu
 		lmapSize = valuePartitionCapacity
 	}
 
-	return &BoundedStringDecoderImpl{
-		StringDecoderImpl:      NewStringDecoderImpl(localValuePartitions),
+	sd := NewStringDecoderImpl(localValuePartitions)
+
+	bsd := &BoundedStringDecoderImpl{
+		StringDecoderImpl:      sd,
 		valueMaxLength:         valueMaxLength,
 		valuePartitionCapacity: valuePartitionCapacity,
 		globalID:               -1,
 		localIDMapping:         make([]LocalIDMap, lmapSize),
 	}
+	sd.StringCoder = bsd
+
+	return bsd
 }
 
 func (sd *BoundedStringDecoderImpl) AddValue(qnc *QNameContext, value *StringValue) error {
@@ -475,6 +476,38 @@ func (sd *BoundedStringDecoderImpl) Clear() {
 }
 
 /*
+	UnboundedStringEncoderImpl implementation
+*/
+
+type UnboundedStringEncoderImpl struct {
+	*StringEncoderImpl
+}
+
+func NewUnboundedStringEncoderImpl(localValuePartitions bool) *UnboundedStringEncoderImpl {
+	se := NewStringEncoderImpl(localValuePartitions)
+
+	ubse := &UnboundedStringEncoderImpl{
+		StringEncoderImpl: se,
+	}
+	se.StringEncoder = ubse
+
+	return ubse
+}
+
+func (se *UnboundedStringEncoderImpl) AddValue(qnc *QNameContext, value string) error {
+	if utils.ContainsKey(se.stringValues, value) {
+		panic("attempt to add dupplicate global string value")
+	}
+
+	// global context
+	se.stringValues[value] = NewValueContainer(value, qnc, se.GetNumberOfStringValues(qnc), len(se.stringValues))
+	// local context
+	se.addLocalValue(qnc, NewStringValueFromString(value))
+
+	return nil
+}
+
+/*
 	BoundedStringEncoderImpl implementation
 */
 
@@ -487,13 +520,18 @@ type BoundedStringEncoderImpl struct {
 }
 
 func NewBoundedStringEncoderImpl(localValuePartitions bool, valueMaxLength, valuePartitionCapacity int) *BoundedStringEncoderImpl {
-	return &BoundedStringEncoderImpl{
-		StringEncoderImpl:      NewStringEncoderImpl(localValuePartitions),
+	se := NewStringEncoderImpl(localValuePartitions)
+
+	bse := &BoundedStringEncoderImpl{
+		StringEncoderImpl:      se,
 		valueMaxLength:         valueMaxLength,
 		valuePartitionCapacity: valuePartitionCapacity,
 		globalID:               -1,
 		globalIDMapping:        make([]ValueContainer, utils.Max(0, valuePartitionCapacity)),
 	}
+	se.StringEncoder = bse
+
+	return bse
 }
 
 func (se *BoundedStringEncoderImpl) AddValue(qnc *QNameContext, value string) error {

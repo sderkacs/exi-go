@@ -173,10 +173,11 @@ func Itos32(i int, index *int, buf []rune) {
 		if i == 0 {
 			break
 		}
-		if sign != 0 {
-			*index--
-			buf[*index] = sign
-		}
+	}
+
+	if sign != 0 {
+		*index--
+		buf[*index] = sign
 	}
 }
 

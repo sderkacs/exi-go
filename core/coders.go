@@ -2163,7 +2163,7 @@ func (e *AbstractEXIBodyEncoder) EncodeNamespaceDeclaration(uri string, prefix *
 }
 
 func (e *AbstractEXIBodyEncoder) EncodeEndElement() error {
-	if err := e.checkPendingCharacters(EventTypeStartElement); err != nil {
+	if err := e.checkPendingCharacters(EventTypeEndElement); err != nil {
 		return err
 	}
 
@@ -2671,8 +2671,9 @@ func (e *AbstractEXIBodyEncoder) EncodeAttribute(uri, localName string, prefix *
 			if _, err := e.isTypeValid(BuiltInGetDefaultDatatype(), value); err != nil {
 				return err
 			}
-			next = ei.GetNextGrammar()
 		}
+
+		next = ei.GetNextGrammar()
 	} else {
 		switch e.limitGrammars() {
 		case ProfileDisablingMechanismXsiType:
@@ -2933,7 +2934,7 @@ func (e *AbstractEXIBodyEncoder) getGlobalAttributeWithRuntimeUriContext(ruc *Ru
 func (e *AbstractEXIBodyEncoder) getDatatypeWhiteSpace() (WhiteSpace, bool) {
 	currentGrammar := e.getCurrentGrammar()
 	if currentGrammar.IsSchemaInformed() && currentGrammar.GetNumberOfEvents() > 0 {
-		prod := currentGrammar.GetProduction(0)
+		prod := currentGrammar.GetProductionByEventCode(0)
 		if prod.GetEvent().GetEventType() == EventTypeCharacters {
 			ch := prod.GetEvent().(*Characters)
 			return ch.GetDataType().GetWhiteSpace(), true
@@ -3011,9 +3012,14 @@ func (e *AbstractEXIBodyEncoder) trimSpaces(runes []rune, len int) int {
 	return newLen
 }
 
-func (e *AbstractEXIBodyEncoder) isSolelyWS(runes []rune, len int) bool {
-	for _, r := range runes {
-		if !unicode.IsSpace(r) {
+// EXI spec (section 4.3.3) and XML define whitespace strictly as space/tab/cr/lf.
+func (e *AbstractEXIBodyEncoder) isWS(r rune) bool {
+	return r == ' ' || r == '\n' || r == '\r' || r == 't'
+}
+
+func (e *AbstractEXIBodyEncoder) isSolelyWS(runes []rune, length int) bool {
+	for i := 0; i < length; i++ {
+		if !e.isWS(runes[i]) {
 			return false
 		}
 	}
@@ -3109,9 +3115,14 @@ func (e *AbstractEXIBodyEncoder) checkPendingCharacters(nextEvent EventType) err
 					// - Simple data (data between s+e) are all preserved.
 					// - For complex data (data between s+s, e+s, e+e), it
 					// is same as schema-informed case.
-					if (e.lastEvent == EventTypeStartElement || e.lastEvent == EventTypeAttribute || e.lastEvent == EventTypeAttributeXsiNil ||
-						e.lastEvent == EventTypeAttributeXsiType || e.lastEvent == EventTypeNamespaceDeclaration) &&
-						(nextEvent == EventTypeEndElement || nextEvent == EventTypeComment || nextEvent == EventTypeProcessingInstruction ||
+					if (e.lastEvent == EventTypeStartElement ||
+						e.lastEvent == EventTypeAttribute ||
+						e.lastEvent == EventTypeAttributeXsiNil ||
+						e.lastEvent == EventTypeAttributeXsiType ||
+						e.lastEvent == EventTypeNamespaceDeclaration) &&
+						(nextEvent == EventTypeEndElement ||
+							nextEvent == EventTypeComment ||
+							nextEvent == EventTypeProcessingInstruction ||
 							nextEvent == EventTypeDocType) {
 						// simple data --> preserve
 					} else {
@@ -3168,33 +3179,106 @@ func (e *AbstractEXIBodyEncoder) encodeCharactersForce(chars Value) error {
 	currentGrammar := e.getCurrentGrammar()
 	ei := currentGrammar.GetProduction(EventTypeCharacters)
 
-	// valid value and valid event-code ?
-	valid, err := e.isTypeValid((ei.GetEvent().(DatatypeEvent)).GetDatatype(), chars)
-	if err != nil {
-		return err
-	}
-	if ei != nil && valid {
-		// right characters event found & data type-valid
-		// --> encode EventCode, schema-valid content plus grammar moves
-		// on
-		if err := e.encode1stLevelEventCode(ei.GetEventCode()); err != nil {
+	if ei != nil {
+		// valid value and valid event-code ?
+		valid, err := e.isTypeValid((ei.GetEvent().(DatatypeEvent)).GetDatatype(), chars)
+		if err != nil {
 			return err
 		}
-		//TODO: Check!!!!
-		if err := e.WriteValue(e.getElementContext().qnc); err != nil {
-			return err
-		}
-		e.updateCurrentRule(ei.GetNextGrammar())
-	} else {
-		// generic CH (on first level)
-		ei = currentGrammar.GetProduction(EventTypeCharactersGeneric)
 
-		if ei != nil {
-			// encode EventCode
+		if valid {
+			// right characters event found & data type-valid
+			// --> encode EventCode, schema-valid content plus grammar moves
+			// on
 			if err := e.encode1stLevelEventCode(ei.GetEventCode()); err != nil {
 				return err
 			}
-			// encode schema-invalid content as string
+			//TODO: Check!!!!
+			if err := e.WriteValue(e.getElementContext().qnc); err != nil {
+				return err
+			}
+			e.updateCurrentRule(ei.GetNextGrammar())
+
+			return nil
+		}
+	}
+
+	// generic CH (on first level)
+	ei = currentGrammar.GetProduction(EventTypeCharactersGeneric)
+
+	if ei != nil {
+		// encode EventCode
+		if err := e.encode1stLevelEventCode(ei.GetEventCode()); err != nil {
+			return err
+		}
+		// encode schema-invalid content as string
+		if _, err := e.isTypeValid(BuiltInGetDefaultDatatype(), chars); err != nil {
+			return err
+		}
+		//TODO: Check!!!
+		if err := e.WriteValue(e.getElementContext().qnc); err != nil {
+			return err
+		}
+		// update current rule
+		e.updateCurrentRule(ei.GetNextGrammar())
+	} else {
+		// Undeclared CH can be found on 2nd level
+		ecCHUndeclared := e.fidelityOptions.Get2ndLevelEventCode(EventTypeCharactersGenericUndeclared, currentGrammar)
+
+		if ecCHUndeclared == NotFound {
+			if e.exiFactory.IsFragment() {
+				// characters in "outer" fragment element
+				e.emitWarning("skip ch")
+			} else if !e.isXMLSpacePreserve && e.fidelityOptions.IsStrict() {
+				charsS, err := chars.ToString()
+				if err != nil {
+					return err
+				}
+				if len(strings.TrimSpace(charsS)) == 0 {
+					e.emitWarning("skip ch: " + charsS)
+				}
+			} else {
+				charsS, err := chars.ToString()
+				if err != nil {
+					return err
+				}
+
+				return fmt.Errorf("characters cannot be encoded: %+v", []rune(charsS))
+			}
+		} else {
+			var updContextRule Grammar
+
+			switch e.limitGrammars() {
+			case ProfileDisablingMechanismXsiType:
+				if err := e.insertXsiTypeAnyType(); err != nil {
+					return err
+				}
+				currentGrammar = e.getCurrentGrammar()
+				// encode 1st level EventCode
+				ei = currentGrammar.GetProduction(EventTypeCharactersGeneric)
+				if ei == nil {
+					return errors.New("ei == nil")
+				}
+				if err := e.encode1stLevelEventCode(ei.GetEventCode()); err != nil {
+					return err
+				}
+				// next rule
+				updContextRule = ei.GetNextGrammar()
+			case ProfileDisablingMechanismGhostProduction:
+				fallthrough
+			default:
+				// encode [undeclared] event-code
+				if err := e.encode2ndLevelEventCode(ecCHUndeclared); err != nil {
+					return err
+				}
+				// learn characters event ?
+				currentGrammar.LearnCharacters()
+				e.productionLearningCounting(currentGrammar)
+				// next rule
+				updContextRule = currentGrammar.GetElementContentGrammar()
+			}
+
+			// content as string
 			if _, err := e.isTypeValid(BuiltInGetDefaultDatatype(), chars); err != nil {
 				return err
 			}
@@ -3203,70 +3287,7 @@ func (e *AbstractEXIBodyEncoder) encodeCharactersForce(chars Value) error {
 				return err
 			}
 			// update current rule
-			e.updateCurrentRule(ei.GetNextGrammar())
-		} else {
-			// Undeclared CH can be found on 2nd level
-			ecCHUndeclared := e.fidelityOptions.Get2ndLevelEventCode(EventTypeCharactersGenericUndeclared, currentGrammar)
-
-			if ecCHUndeclared == NotFound {
-				if e.exiFactory.IsFragment() {
-					// characters in "outer" fragment element
-					e.emitWarning("skip ch")
-				} else if !e.isXMLSpacePreserve && e.fidelityOptions.IsStrict() {
-					charsS, err := chars.ToString()
-					if err != nil {
-						return err
-					}
-					if len(strings.TrimSpace(charsS)) == 0 {
-						e.emitWarning("skip ch: " + charsS)
-					}
-				} else {
-					return errors.New("characters cannot be encoded")
-				}
-			} else {
-				var updContextRule Grammar
-
-				switch e.limitGrammars() {
-				case ProfileDisablingMechanismXsiType:
-					if err := e.insertXsiTypeAnyType(); err != nil {
-						return err
-					}
-					currentGrammar = e.getCurrentGrammar()
-					// encode 1st level EventCode
-					ei = currentGrammar.GetProduction(EventTypeCharactersGeneric)
-					if ei == nil {
-						return errors.New("ei == nil")
-					}
-					if err := e.encode1stLevelEventCode(ei.GetEventCode()); err != nil {
-						return err
-					}
-					// next rule
-					updContextRule = ei.GetNextGrammar()
-				case ProfileDisablingMechanismGhostProduction:
-					fallthrough
-				default:
-					// encode [undeclared] event-code
-					if err := e.encode2ndLevelEventCode(ecCHUndeclared); err != nil {
-						return err
-					}
-					// learn characters event ?
-					currentGrammar.LearnCharacters()
-					e.productionLearningCounting(currentGrammar)
-					// next rule
-					updContextRule = currentGrammar.GetElementContentGrammar()
-				}
-
-				// content as string
-				if _, err := e.isTypeValid(BuiltInGetDefaultDatatype(), chars); err != nil {
-					return err
-				}
-				//TODO: Check!!!
-				if err := e.WriteValue(e.getElementContext().qnc); err != nil {
-					return err
-				}
-				// update current rule
-				e.updateCurrentRule(updContextRule)
-			}
+			e.updateCurrentRule(updContextRule)
 		}
 	}
 
@@ -3857,7 +3878,7 @@ func (e *EXIBodyEncoderInOrder) SetOutputStream(writer *bufio.Writer) error {
 		e.SetOutputChannel(NewBitEncoderChannel(writer))
 	} else {
 		if codingMode != CodingModeBytePacked {
-			return errors.New("coding mode != bype packed")
+			return errors.New("coding mode != byte packed")
 		}
 		// create new byte-aligned channel
 		e.SetOutputChannel(NewByteEncoderChannel(writer))

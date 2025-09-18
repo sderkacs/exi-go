@@ -380,7 +380,7 @@ func (f *DefaultEXIFactory) CreateStringEncoder() StringEncoder {
 	if f.GetValueMaxLength() != DefaultValueMaxLength || f.GetValuePartitionCapacity() != DefaultValuePartitionCapacity {
 		encoder = NewBoundedStringEncoderImpl(f.IsLocalValuePartitions(), f.GetValueMaxLength(), f.GetValuePartitionCapacity())
 	} else {
-		encoder = NewStringEncoderImpl(f.IsLocalValuePartitions())
+		encoder = NewUnboundedStringEncoderImpl(f.IsLocalValuePartitions())
 	}
 
 	return encoder

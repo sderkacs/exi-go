@@ -1554,6 +1554,7 @@ func NewIntegerValue32(ival int) *IntegerValue {
 		lval:          0,
 		bval:          nil,
 	}
+	av.Value = iv
 	return iv
 }
 
@@ -2267,7 +2268,7 @@ func (v *StringValue) GetCharacters() ([]rune, error) {
 }
 
 func (v *StringValue) FillCharactersBuffer(buffer []rune, offset int) error {
-	if offset+len(*v.characters) >= len(buffer) {
+	if offset+len(*v.characters) > len(buffer) {
 		return utils.ErrorIndexOutOfBounds
 	}
 
