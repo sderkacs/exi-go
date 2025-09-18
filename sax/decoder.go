@@ -81,7 +81,11 @@ func (d *SAXDecoder) reset() {
 	d.isFirstElement = true
 }
 
-func (d *SAXDecoder) Parse(source *bufio.Reader, writer *xml.Encoder) error {
+// Parse decodes an EXI-encoded message from the provided bufio.Reader source,
+// writes the corresponding XML tokens to the given xml.Encoder writer, and returns
+// the local name of the document's root element. If an error occurs during decoding
+// or writing, it returns an empty string and the error.
+func (d *SAXDecoder) Parse(source *bufio.Reader, writer *xml.Encoder) (string, error) {
 	d.reset()
 
 	var decoder core.EXIBodyDecoder
@@ -89,57 +93,59 @@ func (d *SAXDecoder) Parse(source *bufio.Reader, writer *xml.Encoder) error {
 	if d.exiBodyOnly {
 		decoder, err = d.exiStream.GetBodyOnlyDecoder(source)
 		if err != nil {
-			return err
+			return "", err
 		}
 	} else {
 		decoder, err = d.exiStream.DecodeHeader(source)
 		if err != nil {
-			return err
+			return "", err
 		}
 	}
 
-	if err := d.parseEXIEvents(decoder, writer); err != nil {
-		return err
+	rootName, err := d.parseEXIEvents(decoder, writer)
+	if err != nil {
+		return "", err
 	}
 
-	return nil
+	return rootName, nil
 }
 
-func (d *SAXDecoder) parseEXIEvents(decoder core.EXIBodyDecoder, writer *xml.Encoder) error {
+func (d *SAXDecoder) parseEXIEvents(decoder core.EXIBodyDecoder, writer *xml.Encoder) (string, error) {
 	var deferredStartElement *core.QNameContext = nil
 	var err error
 	isStartElementDeferred := false
+	rootName := ""
 
 	eventType, exists, err := decoder.Next()
 	if err != nil {
-		return err
+		return "", err
 	}
 	for exists {
 		switch eventType {
 		case core.EventTypeStartDocument:
 			if err := decoder.DecodeStartDocument(); err != nil {
-				return err
+				return "", err
 			}
 		case core.EventTypeEndDocument:
 			if err := decoder.DecodeEndDocument(); err != nil {
-				return err
+				return "", err
 			}
 		case core.EventTypeAttributeXsiNil:
 			qnc, err := decoder.DecodeAttributeXsiNil()
 			if err != nil {
-				return err
+				return "", err
 			}
 
 			if err := d.handleAttribute(decoder, qnc); err != nil {
-				return err
+				return "", err
 			}
 		case core.EventTypeAttributeXsiType:
 			qnc, err := decoder.DecodeAttributeXsiType()
 			if err != nil {
-				return err
+				return "", err
 			}
 			if err := d.handleAttribute(decoder, qnc); err != nil {
-				return err
+				return "", err
 			}
 		case core.EventTypeAttribute,
 			core.EventTypeAttributeNS,
@@ -150,16 +156,16 @@ func (d *SAXDecoder) parseEXIEvents(decoder core.EXIBodyDecoder, writer *xml.Enc
 
 			qnc, err := decoder.DecodeAttribute()
 			if err != nil {
-				return err
+				return "", err
 			}
 
 			if err := d.handleAttribute(decoder, qnc); err != nil {
-				return err
+				return "", err
 			}
 		case core.EventTypeNamespaceDeclaration:
 			nsDecl, err := decoder.DecodeNamespaceDeclaration()
 			if err != nil {
-				return err
+				return "", err
 			}
 			if d.debug {
 				fmt.Printf("NSDECL: %+v\n", nsDecl)
@@ -168,7 +174,7 @@ func (d *SAXDecoder) parseEXIEvents(decoder core.EXIBodyDecoder, writer *xml.Enc
 			d.namespaceList = append(d.namespaceList, *nsDecl)
 		case core.EventTypeSelfContained:
 			if err := decoder.DecodeStartSelfContainedFragment(); err != nil {
-				return err
+				return "", err
 			}
 		case core.EventTypeStartElement,
 			core.EventTypeStartElementNS,
@@ -177,21 +183,25 @@ func (d *SAXDecoder) parseEXIEvents(decoder core.EXIBodyDecoder, writer *xml.Enc
 			if isStartElementDeferred {
 				// handle deferred element if any first
 				if err := d.handleDeferredStartElement(decoder, deferredStartElement, writer); err != nil {
-					return err
+					return "", err
 				}
 				d.isFirstElement = false
 			}
 			// defer start element and keep on processing
 			deferredStartElement, err = decoder.DecodeStartElement()
 			if err != nil {
-				return err
+				return "", err
 			}
 			isStartElementDeferred = true
+
+			if d.isFirstElement {
+				rootName = deferredStartElement.GetLocalName()
+			}
 		case core.EventTypeEndElement, core.EventTypeEndElementUndeclared:
 			if isStartElementDeferred {
 				// handle deferred element if any first
 				if err := d.handleDeferredStartElement(decoder, deferredStartElement, writer); err != nil {
-					return err
+					return "", err
 				}
 				d.isFirstElement = false
 				isStartElementDeferred = false
@@ -204,7 +214,7 @@ func (d *SAXDecoder) parseEXIEvents(decoder core.EXIBodyDecoder, writer *xml.Enc
 			// eeQNameAsString := decoder.GetAttributeQNameAsString()
 			eeQName, err := decoder.DecodeEndElement()
 			if err != nil {
-				return err
+				return "", err
 			}
 
 			// ENCODE
@@ -213,7 +223,7 @@ func (d *SAXDecoder) parseEXIEvents(decoder core.EXIBodyDecoder, writer *xml.Enc
 					Local: eeQName.GetDefaultQNameAsString(),
 				},
 			}); err != nil {
-				return err
+				return "", err
 			}
 			if d.debug {
 				fmt.Printf("[ENCODE] EndElement{Space: %s, Local: %s}\n", eeQName.GetNamespaceUri(), eeQName.GetLocalName())
@@ -223,7 +233,7 @@ func (d *SAXDecoder) parseEXIEvents(decoder core.EXIBodyDecoder, writer *xml.Enc
 			if isStartElementDeferred {
 				// handle deferred element if any first
 				if err := d.handleDeferredStartElement(decoder, deferredStartElement, writer); err != nil {
-					return err
+					return "", err
 				}
 				d.isFirstElement = false
 				isStartElementDeferred = false
@@ -231,19 +241,19 @@ func (d *SAXDecoder) parseEXIEvents(decoder core.EXIBodyDecoder, writer *xml.Enc
 
 			val, err := decoder.DecodeCharacters()
 			if err != nil {
-				return err
+				return "", err
 			}
 
 			switch val.GetValueType() {
 			case core.ValueTypeBoolean, core.ValueTypeString:
 				chars, err := val.GetCharacters()
 				if err != nil {
-					return err
+					return "", err
 				}
 
 				// ENCODE
 				if err := writer.EncodeToken(xml.CharData(string(chars))); err != nil {
-					return err
+					return "", err
 				}
 				if d.debug {
 					fmt.Printf("[ENCODE] CharData: %s\n", string(chars))
@@ -260,19 +270,19 @@ func (d *SAXDecoder) parseEXIEvents(decoder core.EXIBodyDecoder, writer *xml.Enc
 						case core.ValueTypeBoolean, core.ValueTypeString:
 							chars, err := val2.GetCharacters()
 							if err != nil {
-								return err
+								return "", err
 							}
 
 							// ENCODE
 							if err := writer.EncodeToken(xml.CharData(string(chars))); err != nil {
-								return err
+								return "", err
 							}
 							if d.debug {
 								fmt.Printf("[ENCODE] CharData: %s\n", string(chars))
 							}
 							// ENCODE
 							if err := writer.EncodeToken(xml.CharData(string(core.XSDListDelimCharArray))); err != nil {
-								return err
+								return "", err
 							}
 							if d.debug {
 								fmt.Printf("[ENCODE] CharData: %s\n", string(core.XSDListDelimCharArray))
@@ -281,14 +291,14 @@ func (d *SAXDecoder) parseEXIEvents(decoder core.EXIBodyDecoder, writer *xml.Enc
 							offset := 0
 							length, err := val2.GetCharactersLength()
 							if err != nil {
-								return err
+								return "", err
 							}
 
 							// Weird java code here
 							if len(d.cbuffer) < (offset + length + 1) {
 								// ENCODE
 								if err := writer.EncodeToken(xml.CharData(string(d.cbuffer[:offset]))); err != nil {
-									return err
+									return "", err
 								}
 								if d.debug {
 									fmt.Printf("[ENCODE] CharData: %s\n", string(d.cbuffer[:offset]))
@@ -296,7 +306,7 @@ func (d *SAXDecoder) parseEXIEvents(decoder core.EXIBodyDecoder, writer *xml.Enc
 							}
 
 							if err := val2.FillCharactersBuffer(d.cbuffer, offset); err != nil {
-								return err
+								return "", err
 							}
 							offset += length
 							d.cbuffer[offset] = ' '
@@ -304,7 +314,7 @@ func (d *SAXDecoder) parseEXIEvents(decoder core.EXIBodyDecoder, writer *xml.Enc
 
 							// ENCODE
 							if err := writer.EncodeToken(xml.CharData(string(d.cbuffer[:offset]))); err != nil {
-								return err
+								return "", err
 							}
 							if d.debug {
 								fmt.Printf("[ENCODE] CharData: %s\n", string(d.cbuffer[:offset]))
@@ -315,20 +325,20 @@ func (d *SAXDecoder) parseEXIEvents(decoder core.EXIBodyDecoder, writer *xml.Enc
 			default:
 				slen, err := val.GetCharactersLength()
 				if err != nil {
-					return err
+					return "", err
 				}
 				if err := d.ensureBufferCapacity(slen); err != nil {
-					return err
+					return "", err
 				}
 
 				// fills char array with value
 				if err := val.FillCharactersBuffer(d.cbuffer, 0); err != nil {
-					return err
+					return "", err
 				}
 
 				// ENCODE
 				if err := writer.EncodeToken(xml.CharData(string(d.cbuffer[0:slen]))); err != nil {
-					return err
+					return "", err
 				}
 				if d.debug {
 					fmt.Printf("[ENCODE] CharData: %s\n", string(d.cbuffer[0:slen]))
@@ -338,7 +348,7 @@ func (d *SAXDecoder) parseEXIEvents(decoder core.EXIBodyDecoder, writer *xml.Enc
 			if isStartElementDeferred {
 				// handle deferred element if any first
 				if err := d.handleDeferredStartElement(decoder, deferredStartElement, writer); err != nil {
-					return err
+					return "", err
 				}
 				d.isFirstElement = false
 				isStartElementDeferred = false
@@ -346,16 +356,16 @@ func (d *SAXDecoder) parseEXIEvents(decoder core.EXIBodyDecoder, writer *xml.Enc
 
 			docType, err := decoder.DecodeDocType()
 			if err != nil {
-				return err
+				return "", err
 			}
 			if err := d.handleDocType(docType); err != nil {
-				return err
+				return "", err
 			}
 		case core.EventTypeEntityReference:
 			if isStartElementDeferred {
 				// handle deferred element if any first
 				if err := d.handleDeferredStartElement(decoder, deferredStartElement, writer); err != nil {
-					return err
+					return "", err
 				}
 				d.isFirstElement = false
 				isStartElementDeferred = false
@@ -363,17 +373,17 @@ func (d *SAXDecoder) parseEXIEvents(decoder core.EXIBodyDecoder, writer *xml.Enc
 
 			ref, err := decoder.DecodeEntityReference()
 			if err != nil {
-				return err
+				return "", err
 			}
 
 			if err := d.handleEntityReference(ref); err != nil {
-				return err
+				return "", err
 			}
 		case core.EventTypeComment:
 			if isStartElementDeferred {
 				// handle deferred element if any first
 				if err := d.handleDeferredStartElement(decoder, deferredStartElement, writer); err != nil {
-					return err
+					return "", err
 				}
 				d.isFirstElement = false
 				isStartElementDeferred = false
@@ -381,17 +391,17 @@ func (d *SAXDecoder) parseEXIEvents(decoder core.EXIBodyDecoder, writer *xml.Enc
 
 			com, err := decoder.DecodeComment()
 			if err != nil {
-				return err
+				return "", err
 			}
 
 			if err := d.handleComment(com); err != nil {
-				return err
+				return "", err
 			}
 		case core.EventTypeProcessingInstruction:
 			if isStartElementDeferred {
 				// handle deferred element if any first
 				if err := d.handleDeferredStartElement(decoder, deferredStartElement, writer); err != nil {
-					return err
+					return "", err
 				}
 				d.isFirstElement = false
 				isStartElementDeferred = false
@@ -399,7 +409,7 @@ func (d *SAXDecoder) parseEXIEvents(decoder core.EXIBodyDecoder, writer *xml.Enc
 
 			pi, err := decoder.DecodeProcessingInstruction()
 			if err != nil {
-				return err
+				return "", err
 			}
 
 			// ENCODE
@@ -407,13 +417,13 @@ func (d *SAXDecoder) parseEXIEvents(decoder core.EXIBodyDecoder, writer *xml.Enc
 				Target: pi.Target,
 				Inst:   []byte(pi.Data),
 			}); err != nil {
-				return err
+				return "", err
 			}
 			if d.debug {
 				fmt.Printf("[ENCODE] ProcInst{Target = %s, Data = %s}\n", pi.Target, pi.Data)
 			}
 		default:
-			return fmt.Errorf("unexpected EXI event: %d", eventType)
+			return "", fmt.Errorf("unexpected EXI event: %d", eventType)
 		}
 
 		eventType, exists, err = decoder.Next()
@@ -421,11 +431,11 @@ func (d *SAXDecoder) parseEXIEvents(decoder core.EXIBodyDecoder, writer *xml.Enc
 			fmt.Printf("[NEXT] ET: %d, Exists: %v, Err: %v\n", eventType, exists, err)
 		}
 		if err != nil {
-			return err
+			return "", err
 		}
 	}
 
-	return writer.Flush()
+	return rootName, writer.Flush()
 }
 
 func (d *SAXDecoder) handleDeferredStartElement(decoder core.EXIBodyDecoder, deferredStartElement *core.QNameContext, writer *xml.Encoder) error {

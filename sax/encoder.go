@@ -3,9 +3,7 @@ package sax
 import (
 	"bufio"
 	"encoding/xml"
-	"fmt"
 	"io"
-	"reflect"
 	"strings"
 
 	"github.com/sderkacs/exi-go/core"
@@ -119,8 +117,6 @@ func (s *SAXEncoder) Encode(reader *bufio.Reader, reference []byte) error {
 			}
 			return err
 		}
-
-		fmt.Printf("Token (%s): %+v\n", reflect.TypeOf(token), token)
 
 		if start {
 			if err := s.StartDocument(); err != nil {
