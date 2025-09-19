@@ -54,10 +54,18 @@ exiSource := bufio.NewReader(bytes.NewReader(exi))
 resultBuffer := bytes.Buffer{}
 xmlEncoder := xml.NewEncoder(&resultBuffer)
 
-rootName, err := decoder.Parse(exiSource, xmlEncoder)
+exiDecoder, err := sax.NewSAXDecoder(exiFactory)
 if err != nil {
     panic(err)
 }
+rootName, err := exiDecoder.Parse(exiSource, xmlEncoder)
+if err != nil {
+    panic(err)
+}
+
+// Knowing the name of the root element can be useful in some situations.
+fmt.Printf("Root element name: %s\n", rootName) 
+
 if err := os.WriteFile("foo.xml", resultBuffer.Bytes(), 0644); err != nil {
     panic(err)
 }
@@ -75,10 +83,11 @@ exiEncoder, err := sax.NewSAXEncoder(exiFactory)
 if err != nil {
     panic(err)
 }
-resultBuffer = bytes.Buffer{}
-encoder.SetWriter(bufio.NewWriter(&resultBuffer))
-
-if err := encoder.Encode(xmlSource); err != nil {
+resultBuffer := bytes.Buffer{}
+if err := exiEncoder.SetWriter(bufio.NewWriter(&resultBuffer)); err != nil {
+    panic(err)
+}
+if err := exiEncoder.Encode(xmlSource); err != nil {
     panic(err)
 }
 if err := os.WriteFile("foo.exi", resultBuffer.Bytes(), 0644); err != nil {
