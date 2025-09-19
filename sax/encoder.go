@@ -100,7 +100,7 @@ func (s *SAXEncoder) Characters(ch []rune, start, length int) error {
 	return s.encoder.EncodeCharacters(core.NewStringValueFromSlice(ch[start : start+length]))
 }
 
-func (s *SAXEncoder) Encode(reader *bufio.Reader, reference []byte) error {
+func (s *SAXEncoder) Encode(reader *bufio.Reader) error {
 	dec := xml.NewDecoder(reader)
 
 	start := true
