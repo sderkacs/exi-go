@@ -42,7 +42,8 @@ exiFactory.SetFragment(false) // <- Enable or disable fragment mode
 exiFactory.SetFidelityOptions(fidelityOptions)
 exiFactory.SetCodingMode(core.CodingModeBitPacked)
 
-// Encode XML to EXI
+// Decode EXI to XML
+
 exiFile := "foo.exi"
 exi, err := os.ReadFile(exiFile)
 if err != nil {
@@ -61,7 +62,7 @@ if err := os.WriteFile("foo.xml", resultBuffer.Bytes(), 0644); err != nil {
     panic(err)
 }
 
-// Decode EXI to XML
+// Encode XML to EXI
 
 xmlFile := "foo.xml"
 xmlBytes, err := os.ReadFile(xmlFile)
