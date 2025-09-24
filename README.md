@@ -4,6 +4,9 @@ EXI is a very compact representation for the Extensible Markup Language (XML) In
 
 EXI-GO is an attempt to rewrite [EXIficient](https://github.com/EXIficient) (the most advanced open-source EXI codec) in the Go language. At the moment the project closely follows the original Java code.
 
+> [!WARNING]  
+> The project is in **alpha** stage. Use at your own risk!
+
 ## Installation
 
 ```
