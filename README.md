@@ -20,6 +20,7 @@ This project's ultimate goal is to provide the Go community with a fully functio
 
 ## TODO
 
+- [x] EXI marshaling/unmarshaling with Go structs
 - [ ] General code cleanup and better comments/documentation
 - [ ] Better error handling
 - [ ] Runtime grammars loading from XSD

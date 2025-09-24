@@ -1610,6 +1610,7 @@ type AbstractEXIBodyEncoder struct {
 	isXMLSpacePreserve bool
 	lastEvent          EventType
 	cbuffer            []rune // character buffer for CH trimming, replacing, collapsing
+	debug              bool
 }
 
 func NewAbstractEXIBodyEncoder(exiFactory EXIFactory) (*AbstractEXIBodyEncoder, error) {
@@ -1635,6 +1636,7 @@ func NewAbstractEXIBodyEncoder(exiFactory EXIFactory) (*AbstractEXIBodyEncoder, 
 		isXMLSpacePreserve:   false,
 		lastEvent:            -1,
 		cbuffer:              []rune{},
+		debug:                false,
 	}, nil
 }
 
@@ -1863,6 +1865,10 @@ func (e *AbstractEXIBodyEncoder) encode3rdLevelEventCode(pos int) error {
 }
 
 func (e *AbstractEXIBodyEncoder) EncodeStartDocument() error {
+	if e.debug {
+		fmt.Printf("[DEBUG] EncodeStartDocument\n")
+	}
+
 	if e.channel == nil {
 		return errors.New("no valid EXI OutputStream set for encoding. Please use SetOutput( ... )")
 	}
@@ -1885,6 +1891,10 @@ func (e *AbstractEXIBodyEncoder) EncodeStartDocument() error {
 }
 
 func (e *AbstractEXIBodyEncoder) EncodeEndDocument() error {
+	if e.debug {
+		fmt.Printf("[DEBUG] EncodeEndDocument\n")
+	}
+
 	if err := e.checkPendingCharacters(EventTypeEndDocument); err != nil {
 		return err
 	}
@@ -1905,10 +1915,18 @@ func (e *AbstractEXIBodyEncoder) EncodeEndDocument() error {
 }
 
 func (e *AbstractEXIBodyEncoder) EncodeStartElementByQName(se utils.QName) error {
+	if e.debug {
+		fmt.Printf("[DEBUG] EncodeStartElementByQName, se: %+v\n", se)
+	}
+
 	return e.EncodeStartElement(se.Space, se.Local, se.Prefix)
 }
 
 func (e *AbstractEXIBodyEncoder) EncodeStartElement(uri, localName string, prefix *string) error {
+	if e.debug {
+		fmt.Printf("[DEBUG] EncodeStartElement, uri: %s, localName: %s, prefix: %s\n", uri, localName, utils.AsValue(prefix))
+	}
+
 	if err := e.checkPendingCharacters(EventTypeStartElement); err != nil {
 		return err
 	}
@@ -2119,6 +2137,10 @@ func (e *AbstractEXIBodyEncoder) insertXsiTypeAnyType() error {
 }
 
 func (e *AbstractEXIBodyEncoder) EncodeNamespaceDeclaration(uri string, prefix *string) error {
+	if e.debug {
+		fmt.Printf("[DEBUG] EncodeNamespaceDeclaration, uri: %s, prefix: %s\n", uri, utils.AsValue(prefix))
+	}
+
 	e.declarePrefix(prefix, uri)
 
 	if e.preservePrefix {
@@ -2163,6 +2185,10 @@ func (e *AbstractEXIBodyEncoder) EncodeNamespaceDeclaration(uri string, prefix *
 }
 
 func (e *AbstractEXIBodyEncoder) EncodeEndElement() error {
+	if e.debug {
+		fmt.Printf("[DEBUG] EncodeEndElement\n")
+	}
+
 	if err := e.checkPendingCharacters(EventTypeEndElement); err != nil {
 		return err
 	}
@@ -2281,6 +2307,10 @@ func (e *AbstractEXIBodyEncoder) EncodeAttributeList(attributes AttributeList) e
 }
 
 func (e *AbstractEXIBodyEncoder) EncodeAttributeXsiType(kind Value, pfx *string) error {
+	if e.debug {
+		fmt.Printf("[DEBUG] EncodeAttributeXsiType, kind: %+v, pfx: %s\n", kind, utils.AsValue(pfx))
+	}
+
 	force2ndLevelProduction := false
 	if e.limitGrammars() == ProfileDisablingMechanismXsiType {
 		force2ndLevelProduction = true
@@ -2463,6 +2493,10 @@ func (e *AbstractEXIBodyEncoder) encodeAttributeXsiTypeWithForce2ndLP(kind Value
 }
 
 func (e *AbstractEXIBodyEncoder) EncodeAttributeXsiNil(nilValue Value, pfx *string) error {
+	if e.debug {
+		fmt.Printf("[DEBUG] EncodeAttributeXsiNil, nilValue: %+v, pfx: %s\n", nilValue, utils.AsValue(pfx))
+	}
+
 	currentGrammar := e.getCurrentGrammar()
 	if currentGrammar.IsSchemaInformed() {
 		siCurrentRule := currentGrammar.(SchemaInformedGrammar)
@@ -2639,10 +2673,18 @@ func (e *AbstractEXIBodyEncoder) encodeSchemaInvalidAttributeEventCode(eventCode
 }
 
 func (e *AbstractEXIBodyEncoder) EncodeAttributeByQName(at utils.QName, value Value) error {
+	if e.debug {
+		fmt.Printf("[DEBUG] EncodeAttributeByQName, at: %+v, value: %+v\n", at, value)
+	}
+
 	return e.EncodeAttribute(at.Space, at.Local, at.Prefix, value)
 }
 
 func (e *AbstractEXIBodyEncoder) EncodeAttribute(uri, localName string, prefix *string, value Value) error {
+	if e.debug {
+		fmt.Printf("[DEBUG] EncodeAttribute, uri: %s, localName: %s, prefix: %s, value: %+v\n", uri, localName, utils.AsValue(prefix), value)
+	}
+
 	var ei Production
 	var qnc *QNameContext
 	var next Grammar
@@ -3171,6 +3213,14 @@ func (e *AbstractEXIBodyEncoder) checkPendingCharacters(nextEvent EventType) err
 }
 
 func (e *AbstractEXIBodyEncoder) EncodeCharacters(chars Value) error {
+	if e.debug {
+		c, err := chars.ToString()
+		if err != nil {
+			panic(c)
+		}
+		fmt.Printf("[DEBUG] EncodeCharacters, chars: %s\n", c)
+	}
+
 	e.bChars = append(e.bChars, chars)
 	return nil
 }
