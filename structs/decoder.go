@@ -10,6 +10,12 @@ import (
 	"github.com/sderkacs/exi-go/core"
 )
 
+// StructResolver defines an interface for resolving structures by name
+type StructResolver interface {
+	// ResolveStruct creates and returns a pointer to a struct instance based on the element name
+	ResolveStruct(elementName string) (any, error)
+}
+
 // StructDecoder decodes EXI data directly into Go structures using reflection
 type StructDecoder struct {
 	noOptionsFactory core.EXIFactory
@@ -86,6 +92,213 @@ func (d *StructDecoder) DecodeStruct(source *bufio.Reader, target any) error {
 	}
 
 	return d.decodeEXIEvents(decoder, targetElem)
+}
+
+// Decode decodes EXI data from source using a resolver to construct the appropriate struct
+// based on the root element name discovered during parsing
+func (d *StructDecoder) Decode(source *bufio.Reader, resolver StructResolver) (any, error) {
+	var decoder core.EXIBodyDecoder
+	var err error
+	if d.exiBodyOnly {
+		decoder, err = d.exiStream.GetBodyOnlyDecoder(source)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		decoder, err = d.exiStream.DecodeHeader(source)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return d.decodeEXIEventsWithResolver(decoder, resolver)
+}
+
+// decodeEXIEventsWithResolver processes EXI events using a resolver to determine the root structure
+func (d *StructDecoder) decodeEXIEventsWithResolver(decoder core.EXIBodyDecoder, resolver StructResolver) (any, error) {
+	elementStack := newElementStack()
+	var rootStruct any
+
+	eventType, exists, err := decoder.Next()
+	if err != nil {
+		return nil, err
+	}
+
+	for exists {
+		if d.debug {
+			fmt.Printf("[DEBUG] Processing event: %d\n", eventType)
+		}
+
+		switch eventType {
+		case core.EventTypeStartDocument:
+			if err := decoder.DecodeStartDocument(); err != nil {
+				return nil, err
+			}
+
+		case core.EventTypeEndDocument:
+			if err := decoder.DecodeEndDocument(); err != nil {
+				return nil, err
+			}
+
+		case core.EventTypeAttributeXsiNil:
+			qnc, err := decoder.DecodeAttributeXsiNil()
+			if err != nil {
+				return nil, err
+			}
+
+			if d.debug {
+				fmt.Printf("[DEBUG] XSI Nil attribute: %s\n", qnc.GetLocalName())
+			}
+			if err := d.handleAttribute(elementStack, "nil", "true"); err != nil {
+				if d.debug {
+					fmt.Printf("[DEBUG] Failed to handle xsi:nil: %v\n", err)
+				}
+			}
+
+		case core.EventTypeAttributeXsiType:
+			qnc, err := decoder.DecodeAttributeXsiType()
+			if err != nil {
+				return nil, err
+			}
+
+			if d.debug {
+				fmt.Printf("[DEBUG] XSI Type attribute: %s\n", qnc.GetLocalName())
+			}
+			if err := d.handleAttribute(elementStack, "type", qnc.GetLocalName()); err != nil {
+				if d.debug {
+					fmt.Printf("[DEBUG] Failed to handle xsi:type: %v\n", err)
+				}
+			}
+
+		case core.EventTypeStartElement,
+			core.EventTypeStartElementNS,
+			core.EventTypeStartElementGeneric,
+			core.EventTypeStartElementGenericUndeclared:
+
+			qnc, err := decoder.DecodeStartElement()
+			if err != nil {
+				return nil, err
+			}
+
+			elementName := qnc.GetLocalName()
+			if d.debug {
+				fmt.Printf("[DEBUG] Start element: %s\n", elementName)
+			}
+
+			// Handle start element - for root element, use resolver
+			if elementStack.isEmpty() {
+				// Root element - use resolver to create the appropriate struct
+				target, err := resolver.ResolveStruct(elementName)
+				if err != nil {
+					return nil, fmt.Errorf("failed to resolve struct for root element '%s': %w", elementName, err)
+				}
+
+				// Validate that resolver returned a pointer to struct
+				targetValue := reflect.ValueOf(target)
+				if targetValue.Kind() != reflect.Ptr {
+					return nil, fmt.Errorf("resolver must return a pointer to struct, got %T", target)
+				}
+
+				targetElem := targetValue.Elem()
+				if targetElem.Kind() != reflect.Struct {
+					return nil, fmt.Errorf("resolver must return a pointer to struct, got pointer to %s", targetElem.Kind())
+				}
+
+				rootStruct = target
+				if d.debug {
+					fmt.Printf("[DEBUG] Root element %s resolved to type: %s\n", elementName, targetElem.Type().Name())
+				}
+
+				// Push the root struct onto the stack
+				elementStack.push(&stackFrame{
+					value:       targetElem,
+					elementName: elementName,
+					fieldPath:   "",
+				})
+			} else {
+				// Non-root element - use existing logic
+				if err := d.handleStartElement(elementStack, elementStack.peek().value, elementName); err != nil {
+					return nil, err
+				}
+			}
+
+		case core.EventTypeEndElement, core.EventTypeEndElementUndeclared:
+			qnc, err := decoder.DecodeEndElement()
+			if err != nil {
+				return nil, err
+			}
+
+			elementName := qnc.GetLocalName()
+			if d.debug {
+				fmt.Printf("[DEBUG] End element: %s\n", elementName)
+			}
+
+			if err := d.handleEndElement(elementStack); err != nil {
+				return nil, err
+			}
+
+		case core.EventTypeCharacters, core.EventTypeCharactersGeneric, core.EventTypeCharactersGenericUndeclared:
+			val, err := decoder.DecodeCharacters()
+			if err != nil {
+				return nil, err
+			}
+
+			text, err := d.extractTextValue(val)
+			if err != nil {
+				return nil, err
+			}
+
+			if d.debug {
+				fmt.Printf("[DEBUG] Characters: %s\n", text)
+			}
+
+			if err := d.handleCharacters(elementStack, text); err != nil {
+				return nil, err
+			}
+
+		case core.EventTypeAttribute,
+			core.EventTypeAttributeNS,
+			core.EventTypeAttributeGeneric,
+			core.EventTypeAttributeGenericUndeclared,
+			core.EventTypeAttributeInvalidValue,
+			core.EventTypeAttributeAnyInvalidValue:
+
+			qnc, err := decoder.DecodeAttribute()
+			if err != nil {
+				return nil, err
+			}
+
+			attrName := qnc.GetLocalName()
+			attrVal := decoder.GetAttributeValue()
+
+			text, err := d.extractTextValue(attrVal)
+			if err != nil {
+				return nil, err
+			}
+
+			if d.debug {
+				fmt.Printf("[DEBUG] Attribute: %s = %s\n", attrName, text)
+			}
+
+			if err := d.handleAttribute(elementStack, attrName, text); err != nil {
+				if d.debug {
+					fmt.Printf("[DEBUG] Failed to handle attribute %s: %v\n", attrName, err)
+				}
+			}
+
+		default:
+			if d.debug {
+				fmt.Printf("[DEBUG] Skipping event type: %d\n", eventType)
+			}
+		}
+
+		eventType, exists, err = decoder.Next()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return rootStruct, nil
 }
 
 // decodeEXIEvents processes EXI events and populates the target struct
@@ -302,7 +515,7 @@ func (d *StructDecoder) handleStartElement(stack *elementStack, target reflect.V
 		elemType := field.Type().Elem()
 
 		// Handle complex slice elements (structs, pointers to structs, interfaces)
-		// Also handle custom types that are themselves slices (like CertificateType which is []byte)
+		// Also handle custom types that are themselves slices
 		// Simple built-in types like []byte, []string are handled via character data in setFieldValue
 		if elemType.Kind() == reflect.Struct ||
 			elemType.Kind() == reflect.Interface ||
@@ -496,7 +709,7 @@ func (d *StructDecoder) findFieldWithName(structValue reflect.Value, elementName
 			var localName string
 
 			if len(tagParts) >= 2 {
-				// Has namespace: "urn:iso:std:iso:15118:-20:CommonTypes Exponent"
+				// Has namespace: "http://someNamespace SomeValue"
 				localName = tagParts[len(tagParts)-1] // Take the last part as local name
 			} else if len(tagParts) == 1 {
 				// No namespace, split on comma for attributes like "name,attr"
@@ -675,7 +888,7 @@ func (d *StructDecoder) createSliceItem(sliceField reflect.Value, fieldPath stri
 		return newItem, newItem, nil
 
 	case reflect.Slice:
-		// Handle custom slice types like CertificateType ([]byte)
+		// Handle custom slice types
 		// Create new slice instance
 		newItem := reflect.New(elemType).Elem()
 		return newItem, newItem, nil
