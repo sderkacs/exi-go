@@ -1,4 +1,4 @@
-module github.com/sderkacs/exi-go
+module github.com/sderkacs/go-exi
 
 go 1.24.0
 

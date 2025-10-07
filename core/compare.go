@@ -1,8 +1,9 @@
 package core
 
 import (
-	"github.com/sderkacs/exi-go/utils"
 	"strings"
+
+	"github.com/sderkacs/go-exi/utils"
 )
 
 func QNameCompareFunc(q1, q2 utils.QName) int {

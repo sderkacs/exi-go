@@ -1,6 +1,6 @@
 package core
 
-import "github.com/sderkacs/exi-go/utils"
+import "github.com/sderkacs/go-exi/utils"
 
 type EventType int
 

@@ -6,7 +6,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/sderkacs/exi-go/core"
+	"github.com/sderkacs/go-exi/core"
 )
 
 type SAXEncoder struct {

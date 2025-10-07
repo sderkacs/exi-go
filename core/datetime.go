@@ -8,7 +8,7 @@ import (
 	"unicode"
 
 	Text "github.com/linkdotnet/golang-stringbuilder"
-	"github.com/sderkacs/exi-go/utils"
+	"github.com/sderkacs/go-exi/utils"
 )
 
 func DateTimeParse(cal string, kind DateTimeType) (*DateTimeValue, error) {

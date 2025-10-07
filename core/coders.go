@@ -8,7 +8,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/sderkacs/exi-go/utils"
+	"github.com/sderkacs/go-exi/utils"
 )
 
 type ProfileDisablingMechanism int

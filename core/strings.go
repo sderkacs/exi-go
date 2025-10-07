@@ -6,7 +6,7 @@ import (
 	"maps"
 	"slices"
 
-	"github.com/sderkacs/exi-go/utils"
+	"github.com/sderkacs/go-exi/utils"
 )
 
 const (

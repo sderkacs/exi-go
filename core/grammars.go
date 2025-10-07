@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/sderkacs/exi-go/utils"
+	"github.com/sderkacs/go-exi/utils"
 )
 
 type Grammars interface {

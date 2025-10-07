@@ -3,7 +3,7 @@ package core
 import (
 	"fmt"
 
-	"github.com/sderkacs/exi-go/utils"
+	"github.com/sderkacs/go-exi/utils"
 )
 
 type DatatypeID int

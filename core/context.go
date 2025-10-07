@@ -4,7 +4,7 @@ import (
 	"slices"
 	"strconv"
 
-	"github.com/sderkacs/exi-go/utils"
+	"github.com/sderkacs/go-exi/utils"
 )
 
 /*

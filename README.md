@@ -1,16 +1,17 @@
-# EXI-GO - Efficient XML Interchange (EXI) Format 1.0 impementation in Go
+# GO-EXI - Efficient XML Interchange (EXI) Format 1.0 impementation in Go
 
 EXI is a very compact representation for the Extensible Markup Language (XML) Information Set that is intended to simultaneously optimize performance and the utilization of computational resources. The EXI format uses a hybrid approach drawn from the information and formal language theories, plus practical techniques verified by measurements, for entropy encoding XML information. Using a relatively simple algorithm, which is amenable to fast and compact implementation, and a small set of datatype representations, it reliably produces efficient encodings of XML event streams.
 
-EXI-GO is an attempt to rewrite [EXIficient](https://github.com/EXIficient) (the most advanced open-source EXI codec) in the Go language. At the moment the project closely follows the original Java code.
+GO-EXI is an attempt to rewrite [EXIficient](https://github.com/EXIficient) (the most advanced open-source EXI codec) in the Go language. At the moment the project closely follows the original Java code.
 
 > [!WARNING]  
 > The project is in **alpha** stage. Use at your own risk!
+> The project was renamed to avoid confusion with existing brands.
 
 ## Installation
 
 ```
-go get github.com/sderkacs/exi-go
+go get github.com/sderkacs/go-exi
 ```
 
 ## Features and Limitations

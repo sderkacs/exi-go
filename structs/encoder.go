@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/sderkacs/exi-go/core"
+	"github.com/sderkacs/go-exi/core"
 )
 
 // StructEncoder encodes Go structures directly into EXI data using reflection
@@ -294,7 +294,6 @@ func (e *StructEncoder) encodeStruct(encoder core.EXIBodyEncoder, structValue re
 			}
 		}
 	}
-
 
 	if e.debug {
 		fmt.Printf("[DEBUG] End element: %s\n", elementName)

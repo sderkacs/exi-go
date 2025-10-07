@@ -13,7 +13,7 @@ import (
 
 	"github.com/cockroachdb/apd/v3"
 	Text "github.com/linkdotnet/golang-stringbuilder"
-	"github.com/sderkacs/exi-go/utils"
+	"github.com/sderkacs/go-exi/utils"
 )
 
 type ValueType int

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"maps"
 
-	"github.com/sderkacs/exi-go/utils"
+	"github.com/sderkacs/go-exi/utils"
 )
 
 /*

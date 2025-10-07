@@ -5,7 +5,7 @@ import (
 	"encoding/xml"
 	"fmt"
 
-	"github.com/sderkacs/exi-go/core"
+	"github.com/sderkacs/go-exi/core"
 )
 
 const (

@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/sderkacs/exi-go/core"
+	"github.com/sderkacs/go-exi/core"
 )
 
 // StructResolver defines an interface for resolving structures by name
